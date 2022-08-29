@@ -4,4 +4,4 @@ How did I choose this name ? It's the word 'view' in Danish.
 
 # URLs
 Preview: <https://test.jwhgzs.com/>  
-Learn from: <https://vue-course-doc.vercel.app/>
+Learned from: <https://vue-course-doc.vercel.app/>
