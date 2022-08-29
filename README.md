@@ -1,2 +1,2 @@
 # vis
-A copy of Vue.
+A small copy of Vue. Just to practice understanding Vue's principle.
