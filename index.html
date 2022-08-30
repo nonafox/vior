@@ -5,26 +5,34 @@
     </head>
     <body>
         <div style="width: 100%; text-align: center">
-            <h1 style="font-size: 300%; font-weight: unset !important">
-                <vis :="'hello, ' + world"></vis>
+            <h1 style="font-size: 300%; font-weight: unset !important"
+                :test="world.split('').reverse().join('')"
+                @click="alertIt(world)">
+                hello, {{ world }}
             </h1>
             <h2>Power by Vis</h2>
         </div>
         
-        <script type="text/javascript" src="./vis.js"></script>
-        <script type="text/javascript">
+        <script type="module">
+            import Vis from './src/index.js'
+            import VDom from './src/vdom.js'
+            
             new Vis({
                 data() {
                     return {
-                        world: '<strong>world</strong>'
+                        world: 'world'
+                    }
+                },
+                funcs: {
+                    alertIt(text) {
+                        alert(text)
                     }
                 },
                 onMounted(ins) {
                     setInterval(() => {
-                        let arr = ['World', 'Vue', 'Vis', '九尾狐工作室', 'China',
-                                   '台山市新宁中学', '谭镇洋', 'PHP', 'JavaScript', 'NodeJS', '尤雨溪'],
-                            id = Math.round(Math.random() * 10)
-                        ins.data.world = arr[id]
+                        let arr = ['{{ XSS }}', 'Vis', 'Vue', '九尾狐工作室', '谭镇洋'],
+                            id = Math.floor(Math.random() * arr.length)
+                        this.data.world = arr[id]
                     }, 1000)
                 }
             })
