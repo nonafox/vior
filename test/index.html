@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Vis test</title>
+    </head>
+    <body>
+        <div id="app">
+            <h1 :test="world.split('').reverse().join('')" @click="alertIt(world)">
+                {{ world }}
+            </h1>
+            <h2 $for="(k, v) in arr">
+                {{ v }}
+            </h2>
+        </div>
+        <script type="module">
+            import Vis from '/src/index.js'
+            import Ref from '/src/ref.js'
+            window.Ref = Ref
+            
+            let visIns = new Vis({
+                refs() {
+                    return {
+                        world: 'dlrow',
+                        arr: [1, 2, 3, 4, 5]
+                    }
+                },
+                events: {
+                    created() {
+                        console.log(this, 'created')
+                    },
+                    mounted() {
+                        let refs = this.refs, _this = this
+                        setInterval(function() {
+                            refs.world = 'world: ' + Math.random()
+                            refs.arr = []
+                        }, 1000)
+                        
+                        console.log(this, 'mounted')
+                    },
+                    unmounted() {
+                        console.log(this, 'unmounted')
+                    }
+                },
+                funcs: {
+                    alertIt(text) {
+                        alert(text)
+                    }
+                }
+            }).mount(document.getElementById('app'))
+        </script>
+    </body>
+</html>

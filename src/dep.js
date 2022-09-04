@@ -1,22 +1,25 @@
-window.__depContext = null
-
 export default class Dep {
-    constructor(insContext) {
-        this.depsList = new Map()
-        this.insContext = insContext
+    static createDepContext(_this, func) {
+        let doit = () => {
+            Dep.__currentContext = doit
+            func.call(_this)
+            Dep.__currentContext = null
+        }
+        doit()
     }
-    context(func) {
-        window.__depContext = func
-        func.call(this.insContext)
-        window.__depContext = null
+    
+    constructor(_this) {
+        this.__visInstance = _this
+        this.__deps = new Map()
     }
     add() {
-        if (window.__depContext)
-            this.depsList.set(window.__depContext)
+        this.__deps.set(Dep.__currentContext)
     }
     notify() {
-        this.depsList.forEach((v, k) => {
-            k.call(this.insContext)
+        let visInstance = this.__visInstance
+        this.__deps.forEach((v, k) => {
+            if (typeof k == 'function')
+                k.call(visInstance)
         })
     }
 }
