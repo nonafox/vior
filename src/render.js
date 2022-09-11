@@ -1,4 +1,5 @@
 import Util from './util.js'
+import Ref from './ref.js'
 
 export default class Render {
     constructor(viorIns) {
