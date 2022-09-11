@@ -57,6 +57,12 @@ export default class VDom {
             if (onode.attrs[k] != v)
                 onode.dom.setAttribute(k, v)
         }
+        for (let k in onode.attrs) {
+            let v1 = onode.attrs[k],
+                v2 = nnode.attrs[k]
+            if (v1 && ! v2)
+                onode.dom.removeAttribute(k)
+        }
         if (! Util.deepCompare(onode.ctx, nnode.ctx))
             onode.dom.__ctx = nnode.ctx
         if (! nnode.tag && onode.text != nnode.text)
