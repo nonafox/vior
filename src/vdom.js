@@ -6,16 +6,16 @@ export default class VDom {
         this.__visInstance = __this
         this.__render = new Render(__this)
     }
-    mount(elm) {
-        this.__mounted = elm
-        this.__originTree = this.__currentTree = this.touch(elm)
+    mount(dom) {
+        this.__mounted = dom
+        this.__originTree = this.__currentTree = this.read(dom)
     }
     unmount() {
         this.__mounted = this.__originTree = this.__currentTree = null
     }
-    touch(elm) {
+    read(dom, firstRead = true) {
         let tree = []
-        let children = Object.assign({}, elm.childNodes)
+        let children = ! firstRead ? Object.assign({}, dom.childNodes) : [dom]
         for (let k in children) {
             let v = children[k]
             
@@ -25,31 +25,18 @@ export default class VDom {
                 attrs[k2] = v2
             }
             
-            v.__ctx = {
-                __visInstance: this.__visInstance,
-                __triggerError: Util.triggerError
-            }
-            
             tree.push({
                 dom: v,
                 tag: v.tagName ? v.tagName.toLowerCase() : null,
-                type: v.tagName ? 'common' : v.nodeName.substr(1),
+                type: firstRead ? 'root' : (v.tagName ? 'common' : v.nodeName.substr(1)),
                 attrs: attrs,
-                ctx: v.__ctx,
+                ctx: {},
                 text: ! v.tagName ? v.data : null,
-                children: this.touch(v) || null,
+                children: this.read(v, false) || null
             })
         }
-        return tree
-    }
-    update() {
-        if (! this.__mounted)
-            return
         
-        let oldTree = this.__currentTree,
-            newTree = this.__render.render(this.__originTree)
-        this.patch(this.__mounted, oldTree, newTree)
-        this.__currentTree = newTree
+        return ! firstRead ? tree : tree[0]
     }
     isSameNode(vnode1, vnode2) {
         if (! vnode1 || ! vnode2)
@@ -77,9 +64,9 @@ export default class VDom {
         
         nnode.dom = onode.dom
         
-        this.patch(onode.dom, onode.children, nnode.children)
+        this.patch(onode.dom, onode, nnode)
     }
-    touchNewNode(pdom, otree, onode, ntree, nnode) {
+    newNode(pdom, otree, onode, ntree, nnode) {
         let dom = nnode.tag ? document.createElement(nnode.tag) : document.createTextNode(nnode.text)
         for (let k in nnode.attrs) {
             let v = nnode.attrs[k]
@@ -95,18 +82,23 @@ export default class VDom {
             pdom.appendChild(dom)
         
         nnode.dom = dom
-        if (onode)
-            otree[otree.indexOf(onode)].dom.remove()
+        if (onode) {
+            otree[otree.indexOf(onode)].dom.parentNode.removeChild(otree[otree.indexOf(onode)].dom)
+            otree[otree.indexOf(onode)].dom = null
+        }
         
         for (let k in nnode.children) {
             let v = nnode.children[k]
-            this.touchNewNode(dom, null, null, nnode.children, v)
+            this.newNode(dom, null, null, nnode.children, v)
         }
     }
     removeNode(pdom, onode) {
         pdom.removeChild(onode.dom)
+        onode.dom = null
     }
-    patch(pdom, otree, ntree) {
+    patch(pdom, onode, nnode) {
+        let otree = onode.children,
+            ntree = nnode.children
         for (let k in ntree) {
             let v1 = otree[k],
                 v2 = ntree[k]
@@ -116,12 +108,21 @@ export default class VDom {
             else if (v1 && ! v2)
                 this.removeNode(pdom, v1)
             else
-                this.touchNewNode(pdom, otree, v1, ntree, v2)
+                this.newNode(pdom, otree, v1, ntree, v2)
         }
         for (let k in otree) {
             if (otree[k] && ! ntree[k]) {
                 this.removeNode(pdom, otree[k])
             }
         }
+    }
+    update() {
+        if (! this.__mounted)
+            return
+        
+        let oldTree = this.__currentTree,
+            newTree = this.__render.render(this.__originTree)
+        this.patch(this.__mounted, oldTree, newTree)
+        this.__currentTree = newTree
     }
 }

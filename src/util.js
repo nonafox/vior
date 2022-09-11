@@ -35,14 +35,27 @@ export default {
             return false
         }
     },
-    deepCopy(arr) {
-        let res = Array.isArray(arr) ? [] : {}
-        for (let k in arr) {
-            let v = arr[k]
-            if (this.isPlainObject(v))
-                res[k] = this.deepCopy(v)
-            else
-                res[k] = v
+    deepCopy(...arrs) {
+        let res = Array.isArray(arrs[0]) ? [] : {},
+            merges = []
+        for (let _k in arrs) {
+            let arr = arrs[_k],
+                _res = Array.isArray(arr) ? [] : {}
+            for (let k in arr) {
+                let v = arr[k]
+                if (this.isPlainObject(v))
+                    _res[k] = this.deepCopy(v)
+                else
+                    _res[k] = v
+            }
+            merges.push(_res)
+        }
+        for (let k in merges) {
+            let v = merges[k]
+            for (let k2 in v) {
+                let v2 = v[k2]
+                res[k2] = v2
+            }
         }
         return res
     },
@@ -57,11 +70,13 @@ export default {
                 res = res && (() => {
                     let v1 = a1[k],
                         v2 = a2[k]
-                    if (this.isPlainObject(v1) && this.isPlainObject(v2))
+                    if (this.isPlainObject(v1) && this.isPlainObject(v2)) {
                         if (! this.deepCompare(v1, v2))
                             return false
-                    else if (v1 !== v2)
+                    } else if (v1 !== v2) {
                         return false
+                    }
+                    return true
                 })()
                 i1 ++
             }
@@ -72,5 +87,16 @@ export default {
         } else {
             return false
         }
+    },
+    realLength(arr) {
+        if (Array.isArray(arr))
+            return arr.length
+        
+        let i = 0
+        for (let k in arr) {
+            i ++
+        }
+        
+        return i
     }
 }

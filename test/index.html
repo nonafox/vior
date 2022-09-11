@@ -9,20 +9,23 @@
             <h1 :test="world.split('').reverse().join('')" @click="alertIt(world)">
                 {{ world }}
             </h1>
-            <h2 $for="(k, v) in arr">
+            <h2 $for="(k, v) in arr" $if="v != '2'">
                 {{ v }}
             </h2>
+            <h3>Power by Vis</h3>
         </div>
         <script type="module">
             import Vis from '/src/index.js'
             import Ref from '/src/ref.js'
             window.Ref = Ref
+            import Dep from '/src/dep.js'
+            window.Dep = Dep
             
             let visIns = new Vis({
                 refs() {
                     return {
                         world: 'dlrow',
-                        arr: [1, 2, 3, 4, 5]
+                        arr: [0, 1, 2, 3, 4, 5]
                     }
                 },
                 events: {
@@ -33,7 +36,11 @@
                         let refs = this.refs, _this = this
                         setInterval(function() {
                             refs.world = 'world: ' + Math.random()
-                            refs.arr = []
+                            
+                            let arr = [], rand = Math.floor(Math.random() * 10)
+                            for (let i = 0; i < rand; i ++)
+                                arr.push(i)
+                            refs.arr = arr
                         }, 1000)
                         
                         console.log(this, 'mounted')
