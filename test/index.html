@@ -7,7 +7,7 @@
     <body>
         <div id="app">
             <h1 :test="world.split('').reverse().join('')" @click="alertIt(world)">
-                {{ world }}
+                Hello, {{ world }}
             </h1>
             <h2 $for="(k, v) in arr" $if="v != '2'">
                 {{ v }}

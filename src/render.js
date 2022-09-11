@@ -52,7 +52,7 @@ export default class Render {
             }
         }
     }
-    parseCommand(pvnode, vnode, key, val, oriKey) {
+    parseCommand(pvnode, vnode, ovnode, key, val, oriKey) {
         try {
             if (key == 'for') {
                 let reg = /^\s*(.*?)\s+in\s+(.*?)\s*$/i,
@@ -75,17 +75,15 @@ export default class Render {
                         if (valName) vnode.ctx[valName] = v
                         if (idName) vnode.ctx[idName] = i
                     } else {
-                        let nnode = Util.deepCopy(vnode)
+                        let nnode = Util.deepCopy(ovnode)
+                        delete nnode.attrs[oriKey]
                         nnode.dom = null
                         let ctx = nnode.ctx
                         if (keyName) ctx[keyName] = k
                         if (valName) ctx[valName] = v
                         if (idName) ctx[idName] = i
-                        nnode = this.render({ children: [nnode] }, ctx).children[0]
-                        if (nnode) {
-                            this.insertNode(pvnode.children, lastNode, nnode)
-                            lastNode = nnode
-                        }
+                        this.insertNode(pvnode.children, lastNode, nnode)
+                        lastNode = nnode
                     }
                     i ++
                 }
@@ -126,7 +124,7 @@ export default class Render {
             Util.triggerError('Command error', oriKey, val, ex)
         }
     }
-    __render(pvnode, vnode, type, data) {
+    __render(pvnode, vnode, ovnode, type, data) {
         switch (type) {
             case 'attr':
                 let { key, val } = data
@@ -141,7 +139,7 @@ export default class Render {
                         newVal = this.runInContext(vnode, key, val, newKey)
                         break
                     case '$':
-                        this.parseCommand(pvnode, vnode, newKey, val, key)
+                        this.parseCommand(pvnode, vnode, ovnode, newKey, val, key)
                         newKey = newVal = null
                         break
                 }
@@ -167,18 +165,20 @@ export default class Render {
         onode.ctx = Util.deepCopy(defaultCtx, ctx)
         
         for (let k = 0; k < tree.length; k ++) {
-            let v = tree[k]
+            let v = tree[k],
+                ov = Util.deepCopy(v)
             if (! v) continue
             
-            v.ctx = onode.ctx
+            v.ctx = Util.deepCopy(v.ctx || {}, onode.ctx)
             
             let deleted = false
             for (let _k2 in v.attrs) {
                 let k2 = _k2,
                     v2 = v.attrs[k2]
-                let { newKey, newVal } = this.__render(onode, v, 'attr', { key: k2, val: v2 })
+                let { newKey, newVal } = this.__render(onode, v, ov, 'attr', { key: k2, val: v2 })
                 if (v.deleted) {
                     tree.splice(k, 1)
+                    k --
                     deleted = true
                     break
                 }
@@ -191,7 +191,7 @@ export default class Render {
                 continue
             
             if (v.type == 'text' && v.text)
-                v.text = this.__render(onode, v, 'text', v.text)
+                v.text = this.__render(onode, v, ov, 'text', v.text)
             if (v.children)
                 v.children = this.render(v, v.ctx, false).children
         }
