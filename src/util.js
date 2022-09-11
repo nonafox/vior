@@ -43,6 +43,7 @@ export default {
                 _res = Array.isArray(arr) ? [] : {}
             for (let k in arr) {
                 let v = arr[k]
+                
                 if (this.isPlainObject(v))
                     _res[k] = this.deepCopy(v)
                 else
@@ -91,12 +92,10 @@ export default {
     realLength(arr) {
         if (Array.isArray(arr))
             return arr.length
-        
         let i = 0
         for (let k in arr) {
             i ++
         }
-        
         return i
     }
 }

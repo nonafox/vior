@@ -3,15 +3,15 @@ import Render from './render.js'
 
 export default class VDom {
     constructor(__this) {
-        this.__viorInstance = __this
-        this.__render = new Render(__this)
+        this.viorInstance = __this
+        this.render = new Render(__this)
     }
     mount(dom) {
-        this.__mounted = dom
-        this.__originTree = this.__currentTree = this.read(dom)
+        this.mounted = dom
+        this.originTree = this.currentTree = this.read(dom)
     }
     unmount() {
-        this.__mounted = this.__originTree = this.__currentTree = null
+        this.mounted = this.originTree = this.currentTree = null
     }
     read(dom, firstRead = true) {
         let tree = []
@@ -64,7 +64,7 @@ export default class VDom {
                 onode.dom.removeAttribute(k)
         }
         if (! Util.deepCompare(onode.ctx, nnode.ctx))
-            onode.dom.__ctx = nnode.ctx
+            onode.dom.__viorCtx = nnode.ctx
         if (! nnode.tag && onode.text != nnode.text)
             onode.dom.data = nnode.text
         
@@ -78,7 +78,7 @@ export default class VDom {
             let v = nnode.attrs[k]
             dom.setAttribute(k, v)
         }
-        dom.__ctx = nnode.ctx
+        dom.__viorCtx = nnode.ctx
         
         let ndom = onode && otree[otree.indexOf(onode) + 1]
         ndom = ndom ? ndom.dom : null
@@ -123,12 +123,12 @@ export default class VDom {
         }
     }
     update() {
-        if (! this.__mounted)
+        if (! this.mounted)
             return
         
-        let oldTree = this.__currentTree,
-            newTree = this.__render.render(this.__originTree)
-        this.patch(this.__mounted, oldTree, newTree)
-        this.__currentTree = newTree
+        let oldTree = this.currentTree,
+            newTree = this.render.render(this.originTree)
+        this.patch(this.mounted, oldTree, newTree)
+        this.currentTree = newTree
     }
 }

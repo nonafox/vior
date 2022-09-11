@@ -2,7 +2,7 @@ import Util from './util.js'
 
 export default class Render {
     constructor(viorIns) {
-        this.__viorInstance = viorIns
+        this.viorInstance = viorIns
     }
     insertNode(pvlist, svnode, vnode) {
         let i = pvlist.indexOf(svnode)
@@ -15,10 +15,10 @@ export default class Render {
         return eval(__code)
     }
     runInContext(vnode, key, code, evtName = null) {
-        let refKeys = Object.keys(this.__viorInstance.refs.__getRaw()).join(', '),
-            funcKeys = Object.keys(this.__viorInstance.funcs).join(', '),
+        let refKeys = Object.keys(this.viorInstance.refs.__getRaw()).join(', '),
+            funcKeys = Object.keys(this.viorInstance.funcs).join(', '),
             ctxKeys = Object.keys(vnode.ctx).join(', '),
-            extraThis = evtName ? ', this' : ''
+            visThis = ! evtName ? 'this.viorInstance' : 'this.__viorInstance'
         code = ! evtName ? `return (${code})` : `${code}`
         let setup = `
             (function () {
@@ -26,7 +26,7 @@ export default class Render {
                     { ${funcKeys} } = this.funcs,
                     { ${ctxKeys} } = __ctx;
                 ${code}
-            }).call(this.__viorInstance)
+            }).call(${visThis})
         `
         
         if (evtName) {
@@ -37,22 +37,22 @@ export default class Render {
                 try {
                     (function (__code, __ctx) {
                         eval(__code)
-                    }).call($this.__ctx, this[evtSource], $this.__ctx)
+                    }).call($this.__viorCtx, this[evtSource], $this.__viorCtx)
                 } catch (ex) {
                     if (this.__triggerError)
                         this.__triggerError('Runtime error', key, code, ex)
                 }
             }
-            return `this.__ctx.${evt}(this)`
+            return `this.__viorCtx.${evt}(this)`
         } else {
             try {
                 return this.runInEvalContext(setup, vnode.ctx)
             } catch (ex) {
-                Util.triggerError('Runtime error', key, code, ex)
+                Util.triggerError('Render error', key, code, ex)
             }
         }
     }
-    __parseCommand(pvnode, vnode, key, val, oriKey) {
+    parseCommand(pvnode, vnode, key, val, oriKey) {
         try {
             if (key == 'for') {
                 let reg = /^\s*(.*?)\s+in\s+(.*?)\s*$/i,
@@ -67,30 +67,42 @@ export default class Render {
                 let { 0: keyName, 1: valName, 2: idName } = vars
                 let arr = this.runInContext(vnode, key, arrCode)
                 delete vnode.attrs[oriKey]
+                
                 let i = 0, lastNode = vnode
+                let __doit = (k, v) => {
+                    if (i == 0) {
+                        if (keyName) vnode.ctx[keyName] = k
+                        if (valName) vnode.ctx[valName] = v
+                        if (idName) vnode.ctx[idName] = i
+                    } else {
+                        let nnode = Util.deepCopy(vnode)
+                        nnode.dom = null
+                        let ctx = nnode.ctx
+                        if (keyName) ctx[keyName] = k
+                        if (valName) ctx[valName] = v
+                        if (idName) ctx[idName] = i
+                        nnode = this.render({ children: [nnode] }, ctx).children[0]
+                        if (nnode) {
+                            this.insertNode(pvnode.children, lastNode, nnode)
+                            lastNode = nnode
+                        }
+                    }
+                    i ++
+                }
                 if (Util.isPlainObject(arr) && Util.realLength(arr)) {
                     for (let k in arr) {
                         let v = arr[k]
-                        if (i == 0) {
-                            if (keyName) vnode.ctx[keyName] = k
-                            if (valName) vnode.ctx[valName] = v
-                            if (idName) vnode.ctx[idName] = i
-                        } else {
-                            let nnode = Util.deepCopy(vnode)
-                            nnode.dom = null
-                            let ctx = nnode.ctx
-                            if (keyName) ctx[keyName] = k
-                            if (valName) ctx[valName] = v
-                            if (idName) ctx[idName] = i
-                            nnode = this.render({ children: [nnode] }, ctx).children[0]
-                            if (nnode) {
-                                this.insertNode(pvnode.children, lastNode, nnode)
-                                lastNode = nnode
-                            }
-                        }
-                        i ++
+                        __doit(k, v)
+                    }
+                } else if (Ref.isRef(arr)) {
+                    let ks = arr.__getKeys()
+                    for (let kk in ks) {
+                        let k = ks[kk],
+                            v = arr[k]
+                        __doit(k, v)
                     }
                 }
+                
                 if (i == 0) {
                     vnode.deleted = true
                     return
@@ -129,7 +141,7 @@ export default class Render {
                         newVal = this.runInContext(vnode, key, val, newKey)
                         break
                     case '$':
-                        this.__parseCommand(pvnode, vnode, newKey, val, key)
+                        this.parseCommand(pvnode, vnode, newKey, val, key)
                         newKey = newVal = null
                         break
                 }
@@ -148,21 +160,22 @@ export default class Render {
         let onode = needDeepCopy ? Util.deepCopy(_onode) : _onode
         let tree = onode.children
         let defaultCtx = {
-            __viorInstance: this.__viorInstance,
+            __viorInstance: this.viorInstance,
             __triggerError: Util.triggerError
         }
         
         onode.ctx = Util.deepCopy(defaultCtx, ctx)
         
-        for (let k in tree) {
+        for (let k = 0; k < tree.length; k ++) {
             let v = tree[k]
             if (! v) continue
             
             v.ctx = onode.ctx
             
             let deleted = false
-            for (let k2 in v.attrs) {
-                let v2 = v.attrs[k2]
+            for (let _k2 in v.attrs) {
+                let k2 = _k2,
+                    v2 = v.attrs[k2]
                 let { newKey, newVal } = this.__render(onode, v, 'attr', { key: k2, val: v2 })
                 if (v.deleted) {
                     tree.splice(k, 1)

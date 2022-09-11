@@ -12,16 +12,23 @@
             <h2 $for="(k, v) in arr" $if="v != '2'">
                 {{ v }}
             </h2>
-            <h3>Power by Vior</h3>
+            <h3>
+                <span $for="(k, v) in arr2">
+                    {{ v }}
+                </span>
+            </h3>
         </div>
         <script type="module">
             import Vior from '../src/index.js'
+            import Ref from '../src/ref.js'
+            window.Ref = Ref
             
             let viorIns = new Vior({
                 refs() {
                     return {
                         world: 'dlrow',
-                        arr: [0, 1, 2, 3, 4, 5]
+                        arr: [0, 1, 2, 3, 4, 5],
+                        arr2: ['Powered', 'by', 'Vior']
                     }
                 },
                 events: {
