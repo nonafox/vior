@@ -161,7 +161,6 @@ export default class Render {
             __viorInstance: this.viorInstance,
             __triggerError: Util.triggerError
         }
-        
         onode.ctx = Util.deepCopy(defaultCtx, ctx)
         
         for (let k = 0; k < tree.length; k ++) {
