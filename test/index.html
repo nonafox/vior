@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Vis test</title>
+        <title>Vior test</title>
     </head>
     <body>
         <div id="app">
@@ -12,16 +12,16 @@
             <h2 $for="(k, v) in arr" $if="v != '2'">
                 {{ v }}
             </h2>
-            <h3>Power by Vis</h3>
+            <h3>Power by Vior</h3>
         </div>
         <script type="module">
-            import Vis from '/src/index.js'
+            import Vior from '/src/index.js'
             import Ref from '/src/ref.js'
             window.Ref = Ref
             import Dep from '/src/dep.js'
             window.Dep = Dep
             
-            let visIns = new Vis({
+            let viorIns = new Vior({
                 refs() {
                     return {
                         world: 'dlrow',

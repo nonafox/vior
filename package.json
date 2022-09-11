@@ -1,0 +1,23 @@
+{
+  "name": "vior",
+  "version": "0.1.1",
+  "description": "A small copy of Vue. Just to practice understanding Vue's principle.",
+  "main": "src/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jwhgzs/vior.git"
+  },
+  "keywords": ["vue", "js", "vior", "react", "jwhgzs"],
+  "author": "jwhgzs",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jwhgzs/vior/issues"
+  },
+  "homepage": "https://github.com/jwhgzs/vior#readme"
+}

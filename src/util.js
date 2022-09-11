@@ -1,6 +1,6 @@
 export default {
     triggerError(desc, name, code, ex) {
-        console.group('[Vis error]:')
+        console.group('[Vior error]:')
         console.group('Describe: ')
         console.log(desc)
         console.groupEnd()
@@ -14,7 +14,7 @@ export default {
         console.log(ex)
         console.groupEnd()
         console.groupEnd()
-        throw new Error('[Vis error]')
+        throw new Error('[Vior error]')
     },
     isPlainObject(obj) {
         // refer to: https://segmentfault.com/a/1190000013338935

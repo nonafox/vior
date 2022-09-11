@@ -1,8 +1,8 @@
 import Util from './util.js'
 
 export default class Render {
-    constructor(visIns) {
-        this.__visInstance = visIns
+    constructor(viorIns) {
+        this.__viorInstance = viorIns
     }
     insertNode(pvlist, svnode, vnode) {
         let i = pvlist.indexOf(svnode)
@@ -15,8 +15,8 @@ export default class Render {
         return eval(__code)
     }
     runInContext(vnode, key, code, evtName = null) {
-        let refKeys = Object.keys(this.__visInstance.refs.__getRaw()).join(', '),
-            funcKeys = Object.keys(this.__visInstance.funcs).join(', '),
+        let refKeys = Object.keys(this.__viorInstance.refs.__getRaw()).join(', '),
+            funcKeys = Object.keys(this.__viorInstance.funcs).join(', '),
             ctxKeys = Object.keys(vnode.ctx).join(', '),
             extraThis = evtName ? ', this' : ''
         code = ! evtName ? `return (${code})` : `${code}`
@@ -26,7 +26,7 @@ export default class Render {
                     { ${funcKeys} } = this.funcs,
                     { ${ctxKeys} } = __ctx;
                 ${code}
-            }).call(this.__visInstance)
+            }).call(this.__viorInstance)
         `
         
         if (evtName) {
@@ -148,7 +148,7 @@ export default class Render {
         let onode = needDeepCopy ? Util.deepCopy(_onode) : _onode
         let tree = onode.children
         let defaultCtx = {
-            __visInstance: this.__visInstance,
+            __viorInstance: this.__viorInstance,
             __triggerError: Util.triggerError
         }
         

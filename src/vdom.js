@@ -3,7 +3,7 @@ import Render from './render.js'
 
 export default class VDom {
     constructor(__this) {
-        this.__visInstance = __this
+        this.__viorInstance = __this
         this.__render = new Render(__this)
     }
     mount(dom) {

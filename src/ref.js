@@ -3,7 +3,7 @@ import Dep from './dep.js'
 export default class Ref {
     static createRef(_this, obj) {
         return new Proxy({
-            __visInstance: _this,
+            __viorInstance: _this,
             __rawValue: obj,
             __deps: new Dep(_this)
         }, {
