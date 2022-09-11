@@ -1,7 +1,7 @@
-# vis
+# Vior
 A small copy of Vue. Just to practice understanding Vue's principle.  
-How did I choose this name ? It's the word 'view' in Danish.
+How did I choose this name ? Just like Evan You, using the translator!
 
 # URLs
 Preview: <https://test.jwhgzs.com/test>  
-Learned from: <https://vue-course-doc.vercel.app/>
+Learned some from: <https://vue-course-doc.vercel.app/>
