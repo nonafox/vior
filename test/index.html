@@ -12,7 +12,7 @@
             <h2 $for="(k, v) in arr" $if="v != '2'">
                 {{ v }}
             </h2>
-            <h3>
+            <h3 @click="arr = genArr()">
                 <span $for="(k, v) in arr2">
                     {{ v }}
                 </span>
@@ -21,6 +21,7 @@
         <script type="module">
             import Vior from '../src/index.js'
             
+            let refs, funcs
             let viorIns = new Vior({
                 refs() {
                     return {
@@ -31,17 +32,14 @@
                 },
                 events: {
                     created() {
+                        refs = this.refs
+                        funcs = this.funcs
                         console.log(this, 'created')
                     },
                     mounted() {
-                        let refs = this.refs, _this = this
                         setInterval(function() {
                             refs.world = 'world: ' + Math.random()
-                            
-                            let arr = [], rand = Math.floor(Math.random() * 10)
-                            for (let i = 0; i < rand; i ++)
-                                arr.push(i)
-                            refs.arr = arr
+                            funcs.genArr()
                         }, 1000)
                         
                         console.log(this, 'mounted')
@@ -53,6 +51,12 @@
                 funcs: {
                     alertIt(text) {
                         alert(text)
+                    },
+                    genArr() {
+                        let arr = [], rand = Math.floor(Math.random() * 10)
+                        for (let i = 0; i < rand; i ++)
+                            arr.push(i)
+                        refs.arr = arr
                     }
                 }
             }).mount(document.getElementById('app'))

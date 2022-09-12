@@ -17,15 +17,22 @@ export default class Render {
     }
     runInContext(vnode, key, code, evtName = null) {
         let refKeys = Object.keys(this.viorInstance.refs.__getRaw()).join(', '),
-            funcKeys = Object.keys(this.viorInstance.funcs).join(', '),
+            funcKeysArr = Object.keys(this.viorInstance.funcs),
             ctxKeys = Object.keys(vnode.ctx).join(', '),
             visThis = ! evtName ? 'this.viorInstance' : 'this.__viorInstance'
         code = ! evtName ? `return (${code})` : `${code}`
+        
+        let funcsSetup = ''
+        for (let kk in funcKeysArr) {
+            let k = funcKeysArr[kk]
+            funcsSetup += `let ${k} = function (...args) { __this.funcs.${k}.call(__this, ...args) }; `
+        }
         let setup = `
             (function () {
-                let { ${refKeys} } = this.refs,
-                    { ${funcKeys} } = this.funcs,
+                let __this = this,
+                    { ${refKeys} } = this.refs,
                     { ${ctxKeys} } = __ctx;
+                ${funcsSetup}
                 ${code}
             }).call(${visThis})
         `

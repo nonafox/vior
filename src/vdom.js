@@ -8,7 +8,8 @@ export default class VDom {
     }
     mount(dom) {
         this.mounted = dom
-        this.originTree = this.currentTree = this.read(dom)
+        this.originTree = this.read(dom)
+        this.currentTree = Util.deepCopy(this.originTree)
     }
     unmount() {
         this.mounted = this.originTree = this.currentTree = null
@@ -51,7 +52,25 @@ export default class VDom {
         
         return true
     }
-    patchSameNode(onode, nnode) {
+    moveNode(pdom, otree, onode, ntree, nnode) {
+        let oid = otree.indexOf(onode),
+            nid = ntree.indexOf(nnode),
+            oid2 = otree.length - oid - 1,
+            nid2 = ntree.length - nid - 1
+        if ((nid >= 0 && oid && oid != nid && oid2 != nid2) || oid < 0) {
+            let sdom = ntree[nid - 1],
+                edom = ntree[nid + 1]
+            sdom = sdom ? sdom.dom : null
+            edom = edom ? edom.dom : null
+            if (! sdom && ! edom)
+                pdom.insertBefore(nnode.dom, null)
+            if (sdom)
+                pdom.insertBefore(nnode.dom, sdom.nextSibling)
+            else if (edom)
+                pdom.insertBefore(nnode.dom, edom)
+        }
+    }
+    patchSameNode(pdom, otree, onode, ntree, nnode) {
         for (let k in nnode.attrs) {
             let v = nnode.attrs[k]
             if (onode.attrs[k] != v)
@@ -69,57 +88,90 @@ export default class VDom {
             onode.dom.data = nnode.text
         
         nnode.dom = onode.dom
-        
-        this.patch(onode.dom, onode, nnode)
+        if (! nnode.dom)
+            return
+        this.moveNode(pdom, otree, onode, ntree, nnode)
+        this.patch(onode, nnode)
     }
-    newNode(pdom, otree, onode, ntree, nnode) {
+    newNode(pdom, otree, ntree, nnode) {
         let dom = nnode.tag ? document.createElement(nnode.tag) : document.createTextNode(nnode.text)
         for (let k in nnode.attrs) {
             let v = nnode.attrs[k]
             dom.setAttribute(k, v)
         }
         dom.__viorCtx = nnode.ctx
-        
-        let ndom = onode && otree[otree.indexOf(onode) + 1]
-        ndom = ndom ? ndom.dom : null
-        if (ndom)
-            pdom.insertBefore(dom, ndom)
-        else
-            pdom.appendChild(dom)
-        
         nnode.dom = dom
-        if (onode) {
-            otree[otree.indexOf(onode)].dom.parentNode.removeChild(otree[otree.indexOf(onode)].dom)
-            otree[otree.indexOf(onode)].dom = null
-        }
+        this.moveNode(pdom, otree, null, ntree, nnode)
         
         for (let k in nnode.children) {
             let v = nnode.children[k]
-            this.newNode(dom, null, null, nnode.children, v)
+            this.newNode(dom, [], nnode.children, v)
         }
     }
     removeNode(pdom, onode) {
         pdom.removeChild(onode.dom)
         onode.dom = null
     }
-    patch(pdom, onode, nnode) {
+    patchDoit(pdom, otree, onode, ntree, nnode) {
+        if (! this.isSameNode(onode, nnode))
+            return false
+        if (onode.patched)
+            return false
+        this.patchSameNode(pdom, otree, onode, ntree, nnode)
+        onode.patched = true
+        return true
+    }
+    patch(onode, nnode) {
         let otree = onode.children,
-            ntree = nnode.children
-        for (let k in ntree) {
-            let v1 = otree[k],
-                v2 = ntree[k]
+            ntree = nnode.children,
+            pdom = onode.dom
+        
+        let s1i = 0, s2i = 0, e1i = otree.length - 1, e2i = ntree.length - 1
+        while (s2i <= e2i) {
+            let s1e = otree[s1i], s2e = ntree[s2i],
+                e1e = otree[e1i], e2e = ntree[e2i]
             
-            if (this.isSameNode(v1, v2))
-                this.patchSameNode(v1, v2)
-            else if (v1 && ! v2)
-                this.removeNode(pdom, v1)
-            else
-                this.newNode(pdom, otree, v1, ntree, v2)
-        }
-        for (let k in otree) {
-            if (otree[k] && ! ntree[k]) {
-                this.removeNode(pdom, otree[k])
+            if (this.patchDoit(pdom, otree, s1e, ntree, s2e)) {
+                s1i ++
+                s2i ++
+                continue
             }
+            if (this.patchDoit(pdom, otree, s1e, ntree, e2e)) {
+                s1i ++
+                e2i --
+                continue
+            }
+            if (this.patchDoit(pdom, otree, e1e, ntree, s2e)) {
+                e1i --
+                s2i ++
+                continue
+            }
+            if (this.patchDoit(pdom, otree, e1e, ntree, e2e)) {
+                e1i --
+                e2i --
+                continue
+            }
+            
+            let breakIt = false
+            for (let k = 0; k < otree.length; k ++) {
+                let v = otree[k]
+                if (! v.patched && this.patchDoit(pdom, otree, v, ntree, s2e)) {
+                    s2i ++
+                    breakIt = true
+                    break
+                }
+            }
+            if (breakIt)
+                continue
+            
+            this.newNode(pdom, otree, ntree, s2e)
+            s2i ++
+        }
+        
+        for (let k in otree) {
+            let v = otree[k]
+            if (! v.patched)
+                this.removeNode(pdom, v)
         }
     }
     update() {
@@ -128,7 +180,7 @@ export default class VDom {
         
         let oldTree = this.currentTree,
             newTree = this.render.render(this.originTree)
-        this.patch(this.mounted, oldTree, newTree)
+        this.patch(oldTree, newTree)
         this.currentTree = newTree
     }
 }
