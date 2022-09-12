@@ -1,4 +1,5 @@
 import Util from './util.js'
+import Dep from './dep.js'
 import Ref from './ref.js'
 
 export default class Render {
@@ -38,14 +39,12 @@ export default class Render {
         `
         
         if (evtName) {
-            let evt = '__evt_' + evtName,
-                evtSource = evt + '__source'
-            vnode.ctx[evtSource] = setup
+            let evt = '__evt_' + evtName
             vnode.ctx[evt] = function($this) {
                 try {
                     (function (__code, __ctx) {
                         eval(__code)
-                    }).call($this.__viorCtx, this[evtSource], $this.__viorCtx)
+                    }).call($this.__viorCtx, setup, $this.__viorCtx)
                 } catch (ex) {
                     if (this.__triggerError)
                         this.__triggerError('Runtime error', key, code, ex)
@@ -77,15 +76,25 @@ export default class Render {
                 delete vnode.attrs[oriKey]
                 
                 let i = 0, lastNode = vnode
-                let __doit = (k, v) => {
+                let __setDomsNull = (node, setSelfNull = true) => {
+                    if (setSelfNull)
+                        node.dom = null
+                    for (let kkk in node.children)
+                        __setDomsNull(node.children[kkk])
+                }
+                for (let k in arr) {
+                    let v = arr[k]
+                    k = parseInt(k)
                     if (i == 0) {
                         if (keyName) vnode.ctx[keyName] = k
                         if (valName) vnode.ctx[valName] = v
                         if (idName) vnode.ctx[idName] = i
+                        __setDomsNull(vnode, false)
                     } else {
                         let nnode = Util.deepCopy(ovnode)
                         delete nnode.attrs[oriKey]
-                        nnode.dom = null
+                        __setDomsNull(nnode)
+                        
                         let ctx = nnode.ctx
                         if (keyName) ctx[keyName] = k
                         if (valName) ctx[valName] = v
@@ -94,19 +103,6 @@ export default class Render {
                         lastNode = nnode
                     }
                     i ++
-                }
-                if (Util.isPlainObject(arr) && Util.realLength(arr)) {
-                    for (let k in arr) {
-                        let v = arr[k]
-                        __doit(k, v)
-                    }
-                } else if (Ref.isRef(arr)) {
-                    let ks = arr.__getKeys()
-                    for (let kk in ks) {
-                        let k = ks[kk],
-                            v = arr[k]
-                        __doit(k, v)
-                    }
                 }
                 
                 if (i == 0) {
@@ -127,6 +123,17 @@ export default class Render {
                     res2 = this.runInContext(vnode, key, val)
                 if (! (! res && res2))
                     vnode.deleted = true
+            } else if (key == 'value') {
+                let targetKey = val.replace(/^\s/, '').replace(/\s$/, ''),
+                    targetVal = this.runInContext(vnode, key, val)
+                
+                Dep.createDepContext(this.viorInstance, function () {
+                    vnode.data.value = this.refs[targetKey] || ''
+                })
+                
+                let code = `this.refs.${targetKey} = $this.value`,
+                    res = this.runInContext(vnode, key, code, 'auto__input')
+                vnode.attrs.oninput = `${vnode.attrs.oninput || ''}; ${res}`
             }
         } catch (ex) {
             Util.triggerError('Command error', oriKey, val, ex)
@@ -144,17 +151,21 @@ export default class Render {
                         break
                     case '@':
                         newKey = 'on' + newKey
-                        newVal = this.runInContext(vnode, key, val, newKey)
+                        newVal = (vnode[newKey] || '') + '; ' + this.runInContext(vnode, key, val, newKey)
                         break
                     case '$':
                         this.parseCommand(pvnode, vnode, ovnode, newKey, val, key)
                         newKey = newVal = null
                         break
+                    default:
+                        newKey = key
+                        newVal = val
+                        break
                 }
                 return { newKey: newKey, newVal: newVal }
             case 'text':
-                let reg = /{{(.*?)}}/g, res = data, matched
-                while (matched = reg.exec(res)) {
+                let reg = /{{(.*?)}}/g, _res = data, res = data, matched
+                while (matched = reg.exec(_res)) {
                     res = res.replace(matched[0], this.runInContext(vnode, null, matched[1]))
                 }
                 return res

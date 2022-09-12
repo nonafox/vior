@@ -29,21 +29,33 @@ export default class Ref {
             get(target, key) {
                 if (key == '__getRaw')
                     return (k = '__rawValue') => target[k]
-                if (key == '__getKeys')
-                    return () => Object.keys(target.__rawValue)
                 
                 target.__deps.add()
                 return target.__realValue[key]
             },
-            set(target, key, value) {
-                if (target.__isArray && key == 'length') {
-                    target.__rawValue.length = value
-                    return true
+            getOwnPropertyDescriptor(target, key) {
+                return {
+                    enumerable: true,
+                    configurable: true
                 }
-                
+            },
+            ownKeys(target) {
+                return Object.keys(target.__rawValue)
+            },
+            has(target, key) {
+                return key in target.__rawValue
+            },
+            set(target, key, value) {
                 let changed = value != target.__rawValue[key]
                 target.__rawValue[key] = value
                 target.__realValue[key] = Ref.createRef(_this, value)
+                if (changed)
+                    target.__deps.notify()
+                return true
+            },
+            deleteProperty(target, key) {
+                let changed = target.__rawValue[key]
+                delete target.__rawValue[key], target.__realValue[key]
                 if (changed)
                     target.__deps.notify()
                 return true

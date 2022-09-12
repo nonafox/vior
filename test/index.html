@@ -6,17 +6,17 @@
     </head>
     <body>
         <div id="app">
-            <h1 :test="world.split('').reverse().join('')" @click="alertIt(world)">
-                Hello, {{ world }}
-            </h1>
-            <h2 $for="(k, v) in arr" $if="v != '2'">
-                {{ v }}
-            </h2>
-            <h3 @click="arr = genArr()">
-                <span $for="(k, v) in arr2">
-                    {{ v }}
-                </span>
-            </h3>
+            <h1>TODO list</h1>
+            <hr/>
+            <ul>
+                <li $for="(k, v) in list">
+                    {{ k + 1 }}: {{ v }}
+                    <button @click="del(k)">delete</button>
+                </li>
+            </ul>
+            <hr/>
+            <input $value="input" placeholder="event name"/>
+            <button @click="add(input)">add</button>
         </div>
         <script type="module">
             import Vior from '../src/index.js'
@@ -25,38 +25,23 @@
             let viorIns = new Vior({
                 refs() {
                     return {
-                        world: 'dlrow',
-                        arr: [0, 1, 2, 3, 4, 5],
-                        arr2: ['Powered', 'by', 'Vior']
+                        list: ['leave school', 'finish the homework', 'practise the piano', 'start programming'],
+                        input: ''
                     }
                 },
                 events: {
                     created() {
                         refs = this.refs
                         funcs = this.funcs
-                        console.log(this, 'created')
-                    },
-                    mounted() {
-                        setInterval(function() {
-                            refs.world = 'world: ' + Math.random()
-                            funcs.genArr()
-                        }, 1000)
-                        
-                        console.log(this, 'mounted')
-                    },
-                    unmounted() {
-                        console.log(this, 'unmounted')
                     }
                 },
                 funcs: {
-                    alertIt(text) {
-                        alert(text)
+                    add(event) {
+                        refs.list.push(event)
+                        refs.input = ''
                     },
-                    genArr() {
-                        let arr = [], rand = Math.floor(Math.random() * 10)
-                        for (let i = 0; i < rand; i ++)
-                            arr.push(i)
-                        refs.arr = arr
+                    del(id) {
+                        refs.list.splice(id, 1)
                     }
                 }
             }).mount(document.getElementById('app'))

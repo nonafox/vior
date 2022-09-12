@@ -32,6 +32,7 @@ export default class VDom {
                 type: firstRead ? 'root' : (v.tagName ? 'common' : v.nodeName.substr(1)),
                 attrs: attrs,
                 ctx: {},
+                data: {},
                 text: ! v.tagName ? v.data : null,
                 children: this.read(v, false) || null
             })
@@ -79,8 +80,19 @@ export default class VDom {
         for (let k in onode.attrs) {
             let v1 = onode.attrs[k],
                 v2 = nnode.attrs[k]
-            if (v1 && ! v2)
+            if (v1 && (v2 === null || typeof v2 == 'undefined'))
                 onode.dom.removeAttribute(k)
+        }
+        for (let k in nnode.data) {
+            let v = nnode.data[k]
+            if (! Util.deepCompare(onode.dom[k], v))
+                onode.dom[k] = v
+        }
+        for (let k in onode.data) {
+            let v1 = onode.data[k],
+                v2 = nnode.data[k]
+            if (v1 && (v2 === null || typeof v2 == 'undefined'))
+                delete onode.dom[k]
         }
         if (! Util.deepCompare(onode.ctx, nnode.ctx))
             onode.dom.__viorCtx = nnode.ctx
@@ -98,6 +110,10 @@ export default class VDom {
         for (let k in nnode.attrs) {
             let v = nnode.attrs[k]
             dom.setAttribute(k, v)
+        }
+        for (let k in nnode.data) {
+            let v = nnode.data[k]
+            dom[k] = v
         }
         dom.__viorCtx = nnode.ctx
         nnode.dom = dom
