@@ -1,5 +1,5 @@
 # Vior
-A small copy of Vue. Just to practice understanding Vue's principle.  
+A small copy of Vue made on my own. Just to practice understanding Vue's principle.  
 How did I choose this name ? Just like Evan You, using the translator!
 
 # URLs
