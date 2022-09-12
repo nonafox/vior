@@ -17,7 +17,8 @@ export default class Render {
         return eval(__code)
     }
     runInContext(vnode, key, code, evtName = null) {
-        let refKeys = Object.keys(this.viorInstance.refs.__getRaw()).join(', '),
+        let refKeysArr = Object.keys(this.viorInstance.refs.__getRaw()),
+            refKeys = refKeysArr.join(', '),
             funcKeysArr = Object.keys(this.viorInstance.funcs),
             ctxKeys = Object.keys(vnode.ctx).join(', '),
             visThis = ! evtName ? 'this.viorInstance' : 'this.__viorInstance'
@@ -28,13 +29,23 @@ export default class Render {
             let k = funcKeysArr[kk]
             funcsSetup += `let ${k} = function (...args) { __this.funcs.${k}.call(__this, ...args) }; `
         }
+        let refsSetup = '', refKeys_origin = []
+        for (let kk in refKeysArr) {
+            let k = refKeysArr[kk]
+            refsSetup += `if (__origin_value__${k} !== ${k}) { this.refs.${k} = ${k} }; `
+            refKeys_origin.push(`${k}: __origin_value__${k}`)
+        }
+        refKeys_origin = refKeys_origin.join(', ')
+        
         let setup = `
             (function () {
                 let __this = this,
                     { ${refKeys} } = this.refs,
+                    { ${refKeys_origin} } = this.refs,
                     { ${ctxKeys} } = __ctx;
                 ${funcsSetup}
-                ${code}
+                ${code};
+                ${refsSetup}
             }).call(${visThis})
         `
         
@@ -131,7 +142,7 @@ export default class Render {
                     vnode.data.value = this.refs[targetKey] || ''
                 })
                 
-                let code = `this.refs.${targetKey} = $this.value`,
+                let code = `${targetKey} = $this.value`,
                     res = this.runInContext(vnode, key, code, 'auto__input')
                 vnode.attrs.oninput = `${vnode.attrs.oninput || ''}; ${res}`
             }
