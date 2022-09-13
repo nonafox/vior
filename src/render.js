@@ -27,12 +27,12 @@ export default class Render {
         let funcsSetup = ''
         for (let kk in funcKeysArr) {
             let k = funcKeysArr[kk]
-            funcsSetup += `let ${k} = function (...args) { __this.funcs.${k}.call(__this, ...args) }; `
+            funcsSetup += `let ${k} = function (...args) { __syncRefs(); __this.funcs.${k}.call(__this, ...args) }; `
         }
-        let refsSetup = '', refKeys_origin = []
+        let refsSyncSetup = '', refKeys_origin = []
         for (let kk in refKeysArr) {
             let k = refKeysArr[kk]
-            refsSetup += `if (__origin_value__${k} !== ${k}) { this.refs.${k} = ${k} }; `
+            refsSyncSetup += `if (__origin_value__${k} !== ${k}) { this.refs.${k} = ${k} }; `
             refKeys_origin.push(`${k}: __origin_value__${k}`)
         }
         refKeys_origin = refKeys_origin.join(', ')
@@ -40,12 +40,15 @@ export default class Render {
         let setup = `
             (function () {
                 let __this = this,
-                    { ${refKeys} } = this.refs,
+                    __syncRefs = () => {
+                        ${refsSyncSetup}
+                    }
+                let { ${refKeys} } = this.refs,
                     { ${refKeys_origin} } = this.refs,
                     { ${ctxKeys} } = __ctx;
                 ${funcsSetup}
                 ${code};
-                ${refsSetup}
+                __syncRefs()
             }).call(${visThis})
         `
         
@@ -140,7 +143,7 @@ export default class Render {
                 
                 Dep.createDepContext(this.viorInstance, function () {
                     vnode.data.value = this.refs[targetKey] || ''
-                })
+                }, 'auto__input__' + targetKey)
                 
                 let code = `${targetKey} = $this.value`,
                     res = this.runInContext(vnode, key, code, 'auto__input')

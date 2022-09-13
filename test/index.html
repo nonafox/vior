@@ -16,7 +16,7 @@
             </ul>
             <hr/>
             <input $value="input" placeholder="event name"/>
-            <button @click="add(input)">add</button>
+            <button @click="add(input); input = ''">add</button>
         </div>
         <script type="module">
             import Vior from '../src/index.js'
@@ -38,7 +38,6 @@
                 funcs: {
                     add(event) {
                         refs.list.push(event)
-                        refs.input = ''
                     },
                     del(id) {
                         refs.list.splice(id, 1)
