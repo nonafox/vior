@@ -11,7 +11,7 @@ export default class Ref {
             for (let k in obj) {
                 let v = obj[k]
                 if (Util.isPlainObject(v))
-                    nobj[k] = Ref.createRef(_this, v, deps, k)
+                    nobj[k] = Ref.createRef(_this, v, deps, depTag || k)
                 else
                     nobj[k] = v
             }
@@ -31,6 +31,12 @@ export default class Ref {
             get(target, key) {
                 if (key == '__getRaw')
                     return (k = '__rawValue') => target[k]
+                if (key == '__setRaw') {
+                    return (k, v) => {
+                        target.__rawValue[k] = v
+                        target.__realValue[k] = Ref.createRef(_this, v, deps, depTag)
+                    }
+                }
                 
                 target.__deps.add(target.__depTag || key)
                 return target.__realValue[key]

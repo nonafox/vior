@@ -31,7 +31,7 @@ export default class Dep {
             return
         
         let oriVal = this.deps.get(Dep.currentContext),
-            newVal = { tags: (oriVal && oriVal.tags) || {}, key: null }
+            newVal = { tags: oriVal ? (oriVal.tags || {}) : {}, key: null }
         newVal.tags[tag] = true
         newVal.key = Dep.currentContextKey
         this.deps.set(Dep.currentContext, newVal)

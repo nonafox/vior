@@ -15,8 +15,8 @@
                 </li>
             </ul>
             <hr/>
-            <input $value="input" placeholder="event name"/>
-            <button @click="add(input); input = ''">add</button>
+            <input @input="console.log('oninput')" @input::value="inputVal" placeholder="event name"/>
+            <button @click="add(inputVal); inputVal = ''">add</button>
         </div>
         <script type="module">
             import Vior from '../src/index.js'
@@ -26,7 +26,7 @@
                 refs() {
                     return {
                         list: ['leave school', 'finish the homework', 'practise the piano', 'start programming'],
-                        input: ''
+                        inputVal: ''
                     }
                 },
                 events: {
@@ -36,8 +36,8 @@
                     }
                 },
                 funcs: {
-                    add(event) {
-                        refs.list.push(event)
+                    add(text) {
+                        refs.list.push(text)
                     },
                     del(id) {
                         refs.list.splice(id, 1)

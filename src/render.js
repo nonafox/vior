@@ -42,6 +42,9 @@ export default class Render {
                 let __this = this,
                     __syncRefs = () => {
                         ${refsSyncSetup}
+                    },
+                    __setRefWithoutDep = (k, v) => {
+                        this.refs.__setRaw(k, v)
                     }
                 let { ${refKeys} } = this.refs,
                     { ${refKeys_origin} } = this.refs,
@@ -137,6 +140,7 @@ export default class Render {
                     res2 = this.runInContext(vnode, key, val)
                 if (! (! res && res2))
                     vnode.deleted = true
+            /*
             } else if (key == 'value') {
                 let targetKey = val.replace(/^\s/, '').replace(/\s$/, ''),
                     targetVal = this.runInContext(vnode, key, val)
@@ -148,6 +152,7 @@ export default class Render {
                 let code = `${targetKey} = $this.value`,
                     res = this.runInContext(vnode, key, code, 'auto__input')
                 vnode.attrs.oninput = `${vnode.attrs.oninput || ''}; ${res}`
+                */
             }
         } catch (ex) {
             Util.triggerError('Command error', oriKey, val, ex)
@@ -164,8 +169,19 @@ export default class Render {
                         newVal = this.runInContext(vnode, key, val)
                         break
                     case '@':
+                        let reg = /::(.*?)$/, propName = reg.exec(newKey)
+                        if (propName) {
+                            propName = propName[1]
+                            newKey = newKey.replace(reg, '')
+                            
+                            vnode.data[propName] = this.viorInstance.refs[val]
+                            let nullOptions = propName == 'value' ? `''` : 'null'
+                            val = `${val} = $this.${propName} || ${nullOptions}`
+                        }
+                        
                         newKey = 'on' + newKey
-                        newVal = (vnode[newKey] || '') + '; ' + this.runInContext(vnode, key, val, newKey)
+                        let prefix = (vnode.attrs[newKey] || '') + '; '
+                        newVal = prefix + this.runInContext(vnode, key, val, newKey + (propName ? '__auto' : ''))
                         break
                     case '$':
                         this.parseCommand(pvnode, vnode, ovnode, newKey, val, key)
