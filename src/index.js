@@ -9,7 +9,7 @@ export default class Vis {
         this.opts = opts
         
         this.refs = Ref.createRef(this, opts.refs ? opts.refs() : {})
-        this.hooks = opts.hooks || {}
+        this.funcs = opts.funcs || {}
         this.triggerHook('created')
     }
     triggerHook(name) {
