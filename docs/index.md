@@ -6,11 +6,11 @@ Although it is so similar with Vue, there is some differences, so I will assume 
 Here is pretty easy demo, it may help you understand some of Vior's feature.
 ```html
 <div id="app">
-	<h1>{{ text }}</h1>
-	<button @click="changeText()" :disabled="isDisabled">change</button>
-	<button @click="isDisabled = ! isDisabled">
-		{{ isDisabled ? 'un' : '' }}disable
-	</button>
+    <h1>{{ text }}</h1>
+    <button @click="changeText()" :disabled="isDisabled">change</button>
+    <button @click="isDisabled = ! isDisabled">
+        {{ isDisabled ? 'un' : '' }}disable
+    </button>
 </div>
 ```
 ```javascript
@@ -18,21 +18,21 @@ import Vior from 'https://unpkg.com/vior';
 
 let refs, funcs
 let viorIns = new Vior({
-	refs() {
-		text: 'hello, world',
-		isDisabled: false
-	},
-	hooks: {
-		mounted() {
-			refs = this.refs
-			funcs = this.funcs
-		}
-	},
-	funcs: {
-		changeText() {
-			refs.text = refs.text.split('').reverse().join('')
-		}
-	}
+    refs() {
+        text: 'hello, world',
+        isDisabled: false
+    },
+    hooks: {
+        mounted() {
+            refs = this.refs
+            funcs = this.funcs
+        }
+    },
+    funcs: {
+        changeText() {
+            refs.text = refs.text.split('').reverse().join('')
+        }
+    }
 }).mount(document.getElementById('app'));
 ``` 
 
@@ -52,15 +52,15 @@ You can alse define your own functions in the `funcs` option.
 You can just use them like your reactive variables:
 ```javascript
 let viorIns = new Vior({
-	funcs: {
-		yourFunction() {
-			this.funcs.anotherFunction()
-		},
-		anotherFunction() {
-			alert('hello, world')
-		}
-	},
-	...
+    funcs: {
+        yourFunction() {
+            this.funcs.anotherFunction()
+        },
+        anotherFunction() {
+            alert('hello, world')
+        }
+    },
+    ...
 })
 ```
 
@@ -73,16 +73,16 @@ You can define your hook functions in the `hooks` option, there are several hook
 Take a example:
 ```javascript
 let viorIns = new Vior({
-	hooks: {
-		created() {
-			console.log('Vior created!')
-		},
-		mounted() {
-			console.log('Vior mounted!')
-		},
-		...
-	},
-	...
+    hooks: {
+        created() {
+            console.log('Vior created!')
+        },
+        mounted() {
+            console.log('Vior mounted!')
+        },
+        ...
+    },
+    ...
 })
 ```
 
@@ -129,11 +129,11 @@ There is a advanced feature based on DOM events called "Two-way Binding Values" 
 ```
 ```javascript
 let viorIns = new Vior({
-	refs() {
-		return {
-			yourReactiveVar: 'default value'
-		}
-	}
+    refs() {
+        return {
+            yourReactiveVar: 'default value'
+        }
+    }
 })
 ```
 You will find that the core is in this event tag:
