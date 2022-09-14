@@ -9,15 +9,15 @@ export default class Vis {
         this.opts = opts
         
         this.refs = Ref.createRef(this, opts.refs ? opts.refs() : {})
-        this.funcs = opts.funcs || {}
-        this.triggerEvent('created')
+        this.hooks = opts.hooks || {}
+        this.triggerHook('created')
     }
-    triggerEvent(name) {
-        if (this.opts.events && this.opts.events[name]) {
+    triggerHook(name) {
+        if (this.opts.hooks && this.opts.hooks[name]) {
             try {
-                this.opts.events[name].call(this)
+                this.opts.hooks[name].call(this)
             } catch (ex) {
-                Util.triggerError('Runtime error', '(event) ' + name, '', ex)
+                Util.triggerError('Runtime error', '(hook) ' + name, '', ex)
             }
         }
     }
@@ -26,12 +26,14 @@ export default class Vis {
         Dep.createDepContext(this, () => {
             this.vdom.update()
         })
+        this.triggerHook('mounted')
         
-        this.triggerEvent('mounted')
+        return this
     }
     unmount() {
         this.vdom.unmount()
+        this.triggerHook('unmounted')
         
-        this.triggerEvent('unmounted')
+        return this
     }
 }

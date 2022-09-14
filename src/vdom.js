@@ -80,7 +80,7 @@ export default class VDom {
         for (let k in onode.attrs) {
             let v1 = onode.attrs[k],
                 v2 = nnode.attrs[k]
-            if (v1 && (v2 === null || typeof v2 == 'undefined'))
+            if (v1 && (v2 === null || v2 === false || typeof v2 == 'undefined'))
                 onode.dom.removeAttribute(k)
         }
         for (let k in nnode.data) {
