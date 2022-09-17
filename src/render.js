@@ -136,6 +136,8 @@ export default class Render {
                     res2 = this.runInContext(vnode, key, val)
                 if (! (! res && res2))
                     vnode.deleted = true
+            } else if (key == 'html') {
+                vnode.html = this.runInContext(vnode, key, val)
             }
         } catch (ex) {
             Util.triggerError('Command error', oriKey, val, ex)

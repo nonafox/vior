@@ -15,10 +15,13 @@
                 </li>
             </ul>
             <hr/>
-            <input @input::value="inputVal" @input="console.log('oninput', inputVal)" placeholder="event name"/>
+            <input @input::value="inputVal" @input="console.log('input: ', inputVal)" placeholder="event name"/>
             <button @click="add(inputVal); inputVal = ''" :disabled="! inputVal">add</button>
             <hr/>
-            <h2>Powered by Vior</h2>
+            <h2>Total:</h2>
+            <div $html="total"></div>
+            <hr/>
+            <h3>Powered by Vior</h3>
         </div>
         <script type="module">
             import Vior from '../src/index.js'
@@ -28,7 +31,10 @@
                 refs() {
                     return {
                         list: ['leave school', 'finish the homework', 'practise the piano', 'start programming'],
-                        inputVal: ''
+                        inputVal: '',
+                        total() {
+                            return '<strong>You need to do: </strong>' + this.refs.list.join(', ')
+                        }
                     }
                 },
                 hooks: {
@@ -43,6 +49,11 @@
                     },
                     del(id) {
                         refs.list.splice(id, 1)
+                    }
+                },
+                watchers: {
+                    total() {
+                        console.log('watcher: total changed')
                     }
                 }
             }).mount(document.getElementById('app'))

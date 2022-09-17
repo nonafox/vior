@@ -33,6 +33,7 @@ export default class VDom {
                 attrs: attrs,
                 ctx: {},
                 data: {},
+                html: null,
                 text: ! v.tagName ? v.data : null,
                 children: this.read(v, false) || null
             })
@@ -112,6 +113,8 @@ export default class VDom {
             onode.dom.__viorCtx = nnode.ctx
         if (! nnode.tag && onode.text != nnode.text)
             onode.dom.data = nnode.text
+        if (onode.html != nnode.html)
+            onode.dom.innerHTML = nnode.html
         
         nnode.dom = onode.dom
         if (! nnode.dom)
@@ -132,6 +135,8 @@ export default class VDom {
             dom[k] = v
         }
         dom.__viorCtx = nnode.ctx
+        if (nnode.html)
+            dom.innerHTML = nnode.html
         nnode.dom = dom
         this.moveNode(pdom, ldl, otree, null, ntree, nnode)
         
