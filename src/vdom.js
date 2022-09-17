@@ -53,25 +53,39 @@ export default class VDom {
         
         return true
     }
-    moveNode(pdom, otree, onode, ntree, nnode) {
-        let oid = otree.indexOf(onode),
-            nid = ntree.indexOf(nnode),
-            oid2 = otree.length - oid - 1,
-            nid2 = ntree.length - nid - 1
-        if ((nid >= 0 && oid && oid != nid && oid2 != nid2) || oid < 0) {
-            let sdom = ntree[nid - 1],
-                edom = ntree[nid + 1]
-            sdom = sdom ? sdom.dom : null
-            edom = edom ? edom.dom : null
-            if (! sdom && ! edom)
-                pdom.insertBefore(nnode.dom, null)
-            if (sdom)
-                pdom.insertBefore(nnode.dom, sdom.nextSibling)
-            else if (edom)
-                pdom.insertBefore(nnode.dom, edom)
+    moveNode(pdom, ldl, otree, onode, ntree, nnode) {
+        let nid = ntree.indexOf(nnode),
+            sdom = ntree[nid - 1],
+            edom = ntree[nid + 1]
+        sdom = sdom ? sdom.dom : null
+        edom = edom ? edom.dom : null
+        sdom = ldl.indexOf(sdom) >= 0 && sdom
+        edom = ldl.indexOf(edom) >= 0 && edom
+        
+        if (! sdom && ! edom && ldl.indexOf(nnode.dom) != 0) {
+            pdom.insertBefore(nnode.dom, null)
+            
+            if (ldl.indexOf(nnode.dom) >= 0)
+                ldl.splice(ldl.indexOf(nnode.dom), 1)
+            ldl.push(nnode.dom)
+        } else if (sdom && ldl[ldl.indexOf(sdom) + 1] !== nnode.dom) {
+            pdom.insertBefore(nnode.dom, ldl[ldl.indexOf(sdom) + 1])
+            
+            if (ldl.indexOf(nnode.dom) >= 0)
+                ldl.splice(ldl.indexOf(nnode.dom), 1)
+            if (ldl[ldl.indexOf(sdom) + 1])
+                ldl.splice(ldl.indexOf(sdom) + 1, 0, nnode.dom)
+            else
+                ldl.push(nnode.dom)
+        } else if (edom && ldl[ldl.indexOf(edom) - 1] !== nnode.dom) {
+            pdom.insertBefore(nnode.dom, edom)
+            
+            if (ldl.indexOf(nnode.dom) >= 0)
+                ldl.splice(ldl.indexOf(nnode.dom), 1)
+            ldl.splice(ldl.indexOf(edom), 0, nnode.dom)
         }
     }
-    patchSameNode(pdom, otree, onode, ntree, nnode) {
+    patchSameNode(pdom, ldl, otree, onode, ntree, nnode) {
         for (let k in nnode.attrs) {
             let v = nnode.attrs[k]
             if (onode.attrs[k] != v)
@@ -102,10 +116,10 @@ export default class VDom {
         nnode.dom = onode.dom
         if (! nnode.dom)
             return
-        this.moveNode(pdom, otree, onode, ntree, nnode)
+        this.moveNode(pdom, ldl, otree, onode, ntree, nnode)
         this.patch(onode, nnode)
     }
-    newNode(pdom, otree, ntree, nnode) {
+    newNode(pdom, ldl, otree, ntree, nnode) {
         let dom = nnode.tag ? document.createElement(nnode.tag) : document.createTextNode(nnode.text)
         for (let k in nnode.attrs) {
             let v = nnode.attrs[k]
@@ -117,61 +131,67 @@ export default class VDom {
         }
         dom.__viorCtx = nnode.ctx
         nnode.dom = dom
-        this.moveNode(pdom, otree, null, ntree, nnode)
+        this.moveNode(pdom, ldl, otree, null, ntree, nnode)
         
         for (let k in nnode.children) {
             let v = nnode.children[k]
-            this.newNode(dom, [], nnode.children, v)
+            this.newNode(dom, [], [], nnode.children, v)
         }
     }
-    removeNode(pdom, onode) {
+    removeNode(pdom, ldl, onode) {
         pdom.removeChild(onode.dom)
+        ldl.splice(ldl.indexOf(onode.dom), 1)
         onode.dom = null
     }
-    patchDoit(pdom, otree, onode, ntree, nnode) {
+    patchDoit(pdom, ldl, otree, onode, ntree, nnode) {
         if (! this.isSameNode(onode, nnode))
             return false
         if (onode.patched)
             return false
-        this.patchSameNode(pdom, otree, onode, ntree, nnode)
+        this.patchSameNode(pdom, ldl, otree, onode, ntree, nnode)
         onode.patched = true
         return true
     }
     patch(onode, nnode) {
         let otree = onode.children,
             ntree = nnode.children,
-            pdom = onode.dom
+            pdom = onode.dom,
+            ldl = []
+        for (let k in otree) {
+            let v = otree[k]
+            ldl.push(v.dom)
+        }
         
         let s1i = 0, s2i = 0, e1i = otree.length - 1, e2i = ntree.length - 1
         while (s2i <= e2i) {
             let s1e = otree[s1i], s2e = ntree[s2i],
                 e1e = otree[e1i], e2e = ntree[e2i]
             
-            if (this.patchDoit(pdom, otree, s1e, ntree, s2e)) {
+            if (this.patchDoit(pdom, ldl, otree, s1e, ntree, s2e)) {
                 s1i ++
                 s2i ++
                 continue
             }
-            if (this.patchDoit(pdom, otree, s1e, ntree, e2e)) {
+            if (this.patchDoit(pdom, ldl, otree, e1e, ntree, e2e)) {
+                e1i --
+                e2i --
+                continue
+            }
+            if (this.patchDoit(pdom, ldl, otree, s1e, ntree, e2e)) {
                 s1i ++
                 e2i --
                 continue
             }
-            if (this.patchDoit(pdom, otree, e1e, ntree, s2e)) {
+            if (this.patchDoit(pdom, ldl, otree, e1e, ntree, s2e)) {
                 e1i --
                 s2i ++
-                continue
-            }
-            if (this.patchDoit(pdom, otree, e1e, ntree, e2e)) {
-                e1i --
-                e2i --
                 continue
             }
             
             let breakIt = false
             for (let k = 0; k < otree.length; k ++) {
                 let v = otree[k]
-                if (! v.patched && this.patchDoit(pdom, otree, v, ntree, s2e)) {
+                if (! v.patched && this.patchDoit(pdom, ldl, otree, v, ntree, s2e)) {
                     s2i ++
                     breakIt = true
                     break
@@ -180,14 +200,14 @@ export default class VDom {
             if (breakIt)
                 continue
             
-            this.newNode(pdom, otree, ntree, s2e)
+            this.newNode(pdom, ldl, otree, ntree, s2e)
             s2i ++
         }
         
         for (let k in otree) {
             let v = otree[k]
             if (! v.patched)
-                this.removeNode(pdom, v)
+                this.removeNode(pdom, ldl, v)
         }
     }
     update() {
