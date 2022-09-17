@@ -88,9 +88,10 @@ export default class VDom {
     }
     patchSameNode(pdom, ldl, otree, onode, ntree, nnode) {
         for (let k in nnode.attrs) {
-            let v = nnode.attrs[k]
-            if (onode.attrs[k] != v)
-                onode.dom.setAttribute(k, v)
+            let v1 = onode.attrs[k],
+                v2 = nnode.attrs[k]
+            if (v1 != v2)
+                onode.dom.setAttribute(k, v2)
         }
         for (let k in onode.attrs) {
             let v1 = onode.attrs[k],
@@ -99,9 +100,10 @@ export default class VDom {
                 onode.dom.removeAttribute(k)
         }
         for (let k in nnode.data) {
-            let v = nnode.data[k]
-            if (! Util.deepCompare(onode.dom[k], v))
-                onode.dom[k] = v
+            let v1 = onode.data[k],
+                v2 = nnode.data[k]
+            if (typeof v1 == typeof v2 && typeof v1 == 'function' ? v1.toString() != v2.toString() : ! Util.deepCompare(v1, v2))
+                onode.dom[k] = v2
         }
         for (let k in onode.data) {
             let v1 = onode.data[k],

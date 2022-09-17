@@ -16,13 +16,14 @@ export default class Render {
     runInEvalContext(__code, __ctx) {
         return eval(__code)
     }
-    runInContext(vnode, key, code, evtName = null) {
+    runInContext(vnode, key, code, isEvt = false) {
         let refKeysArr = Object.keys(this.viorInstance.refs.__getRaw()),
             refKeys = refKeysArr.join(', '),
             funcKeysArr = Object.keys(this.viorInstance.funcs),
             ctxKeys = Object.keys(vnode.ctx).join(', '),
-            thises = ! evtName ? 'null, this.viorInstance' : 'this, this.__viorCtx.__viorInstance'
-        code = ! evtName ? `return (${code})` : `${code}`
+            ctxSetup = ! isEvt ? '__ctx' : 'this.__viorCtx',
+            thises = ! isEvt ? 'null, this.viorInstance' : 'this, this.__viorCtx.__viorInstance'
+        code = ! isEvt ? `return (${code})` : `${code}`
         
         let funcsSetup = ''
         for (let kk in funcKeysArr) {
@@ -44,26 +45,15 @@ export default class Render {
                     }
                 let { ${refKeys} } = $this.refs,
                     { ${refKeys_origin} } = $this.refs,
-                    { ${ctxKeys} } = __ctx;
+                    { ${ctxKeys} } = ${ctxSetup};
                 ${funcsSetup}
                 ${code};
                 __syncRefs()
             }).call(${thises})
         `
         
-        if (evtName) {
-            let evt = '__evt_' + evtName
-            vnode.ctx[evt] = function(domThis) {
-                try {
-                    (function (__code, __ctx) {
-                        eval(__code)
-                    }).call(domThis, setup, domThis.__viorCtx)
-                } catch (ex) {
-                    if (this.__triggerError)
-                        this.__triggerError('Runtime error', key, code, ex)
-                }
-            }
-            return `this.__viorCtx.${evt}(this)`
+        if (isEvt) {
+            return setup
         } else {
             try {
                 return this.runInEvalContext(setup, vnode.ctx)
@@ -160,13 +150,15 @@ export default class Render {
                             newKey = newKey.replace(reg, '')
                             
                             vnode.data[propName] = this.viorInstance.refs[val]
-                            let nullOptions = propName == 'value' ? `''` : 'null'
-                            val = `${val} = this.${propName} || ${nullOptions}`
+                            val = `${val} = this.${propName}`
                         }
                         
-                        newKey = 'on' + newKey
-                        let prefix = (vnode.attrs[newKey] || '') + '; '
-                        newVal = prefix + this.runInContext(vnode, key, val, newKey + (propName ? '__auto' : ''))
+                        newKey = '__unhandled_functions__on' + newKey
+                        let funcs = vnode.data[newKey] || []
+                        funcs.push(this.runInContext(vnode, key, val, true))
+                        vnode.data[newKey] = funcs
+                        
+                        newKey = newVal = null
                         break
                     case '$':
                         this.parseCommand(pvnode, vnode, ovnode, newKey, val, key)
@@ -186,6 +178,22 @@ export default class Render {
                 return res
             default:
                 return null
+        }
+    }
+    handleEvtFunctions(vnode) {
+        for (let _k in vnode.data) {
+            let v = vnode.data[_k]
+            let k = /^__unhandled_functions__(.*)$/.exec(_k)
+            if (! k)
+                continue
+            k = k[1]
+            
+            let _res = v.join('; '),
+                res
+            eval(`res = function (...$args) { ${_res} }`)
+            
+            delete vnode.data[_k]
+            vnode.data[k] = res
         }
     }
     render(_onode, ctx = {}, needDeepCopy = true) {
@@ -222,6 +230,7 @@ export default class Render {
             }
             if (deleted)
                 continue
+            this.handleEvtFunctions(v)
             
             if (v.type == 'text' && v.text)
                 v.text = this.__render(onode, v, ov, 'text', v.text)

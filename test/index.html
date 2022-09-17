@@ -15,8 +15,8 @@
                 </li>
             </ul>
             <hr/>
-            <input @input::value="inputVal" @input="console.log('input: ', inputVal)" placeholder="event name"/>
-            <button @click="add(inputVal); inputVal = ''" :disabled="! inputVal">add</button>
+            <input @input::value="inputVal" @input="console.log('input: ', inputVal)" @change="add()" placeholder="event name"/>
+            <button @click="add()" :disabled="! inputVal">add</button>
             <hr/>
             <h2>Total:</h2>
             <div $html="total"></div>
@@ -44,8 +44,9 @@
                     }
                 },
                 funcs: {
-                    add(text) {
-                        refs.list.push(text)
+                    add() {
+                        refs.list.push(refs.inputVal)
+                        refs.inputVal = ''
                     },
                     del(id) {
                         refs.list.splice(id, 1)
