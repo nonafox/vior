@@ -15,8 +15,8 @@
                 </li>
             </ul>
             <hr/>
-            <input @input="console.log('oninput')" @input::value="inputVal" placeholder="event name"/>
-            <button @click="add(inputVal); inputVal = ''">add</button>
+            <input @input::value="inputVal" @input="console.log('oninput', inputVal)" placeholder="event name"/>
+            <button @click="add(inputVal); inputVal = ''" :disabled="! inputVal">add</button>
             <hr/>
             <h2>Powered by Vior</h2>
         </div>

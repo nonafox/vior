@@ -120,7 +120,9 @@ export default class VDom {
         this.patch(onode, nnode)
     }
     newNode(pdom, ldl, otree, ntree, nnode) {
-        let dom = nnode.tag ? document.createElement(nnode.tag) : document.createTextNode(nnode.text)
+        let dom = nnode.tag ? document.createElement(nnode.tag) : (
+            nnode.type == 'text' ? document.createTextNode(nnode.text) : document.createComment(nnode.text)
+        )
         for (let k in nnode.attrs) {
             let v = nnode.attrs[k]
             dom.setAttribute(k, v)

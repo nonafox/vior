@@ -21,47 +21,43 @@ export default class Render {
             refKeys = refKeysArr.join(', '),
             funcKeysArr = Object.keys(this.viorInstance.funcs),
             ctxKeys = Object.keys(vnode.ctx).join(', '),
-            visThis = ! evtName ? 'this.viorInstance' : 'this.__viorInstance'
+            thises = ! evtName ? 'null, this.viorInstance' : 'this, this.__viorCtx.__viorInstance'
         code = ! evtName ? `return (${code})` : `${code}`
         
         let funcsSetup = ''
         for (let kk in funcKeysArr) {
             let k = funcKeysArr[kk]
-            funcsSetup += `let ${k} = function (...args) { __syncRefs(); __this.funcs.${k}.call(__this, ...args) }; `
+            funcsSetup += `let ${k} = function (...args) { __syncRefs(); $this.funcs.${k}.call($this, ...args) }; `
         }
         let refsSyncSetup = '', refKeys_origin = []
         for (let kk in refKeysArr) {
             let k = refKeysArr[kk]
-            refsSyncSetup += `if (__origin_value__${k} !== ${k}) { this.refs.${k} = ${k} }; `
+            refsSyncSetup += `if (__origin_value__${k} !== ${k}) { $this.refs.${k} = ${k} }; `
             refKeys_origin.push(`${k}: __origin_value__${k}`)
         }
         refKeys_origin = refKeys_origin.join(', ')
         
         let setup = `
-            (function () {
-                let __this = this,
-                    __syncRefs = () => {
+            (function ($this) {
+                let __syncRefs = () => {
                         ${refsSyncSetup}
-                    },
-                    __setRefWithoutDep = (k, v) => {
-                        this.refs.__setRaw(k, v)
                     }
-                let { ${refKeys} } = this.refs,
-                    { ${refKeys_origin} } = this.refs,
+                let { ${refKeys} } = $this.refs,
+                    { ${refKeys_origin} } = $this.refs,
                     { ${ctxKeys} } = __ctx;
                 ${funcsSetup}
                 ${code};
                 __syncRefs()
-            }).call(${visThis})
+            }).call(${thises})
         `
         
         if (evtName) {
             let evt = '__evt_' + evtName
-            vnode.ctx[evt] = function($this) {
+            vnode.ctx[evt] = function(domThis) {
                 try {
                     (function (__code, __ctx) {
                         eval(__code)
-                    }).call($this.__viorCtx, setup, $this.__viorCtx)
+                    }).call(domThis, setup, domThis.__viorCtx)
                 } catch (ex) {
                     if (this.__triggerError)
                         this.__triggerError('Runtime error', key, code, ex)
@@ -140,19 +136,6 @@ export default class Render {
                     res2 = this.runInContext(vnode, key, val)
                 if (! (! res && res2))
                     vnode.deleted = true
-            /*
-            } else if (key == 'value') {
-                let targetKey = val.replace(/^\s/, '').replace(/\s$/, ''),
-                    targetVal = this.runInContext(vnode, key, val)
-                
-                Dep.createDepContext(this.viorInstance, function () {
-                    vnode.data.value = this.refs[targetKey] || ''
-                }, 'auto__input__' + targetKey)
-                
-                let code = `${targetKey} = $this.value`,
-                    res = this.runInContext(vnode, key, code, 'auto__input')
-                vnode.attrs.oninput = `${vnode.attrs.oninput || ''}; ${res}`
-                */
             }
         } catch (ex) {
             Util.triggerError('Command error', oriKey, val, ex)
@@ -176,7 +159,7 @@ export default class Render {
                             
                             vnode.data[propName] = this.viorInstance.refs[val]
                             let nullOptions = propName == 'value' ? `''` : 'null'
-                            val = `${val} = $this.${propName} || ${nullOptions}`
+                            val = `${val} = this.${propName} || ${nullOptions}`
                         }
                         
                         newKey = 'on' + newKey
