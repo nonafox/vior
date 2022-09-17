@@ -3,7 +3,7 @@ import Dep from './dep.js'
 
 export default class Ref {
     static createRef(_this, _obj, _deps = null, depTag = null) {
-        let obj = typeof _obj == 'object' ? Util.deepCopy(_obj) : _obj,
+        let obj = _obj && typeof _obj == 'object' ? Util.deepCopy(_obj) : _obj,
             nobj = Array.isArray(obj) ? [] : {},
             deps = _deps || new Dep(_this)
         

@@ -150,7 +150,7 @@ export default class Render {
                             newKey = newKey.replace(reg, '')
                             
                             vnode.data[propName] = this.viorInstance.refs[val]
-                            val = `${val} = this.${propName}`
+                            val = `${val} = this.${propName}; $args[0].preventDefault()`
                         }
                         
                         newKey = '__unhandled_functions__on' + newKey

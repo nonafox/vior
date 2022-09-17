@@ -102,7 +102,8 @@ export default class VDom {
         for (let k in nnode.data) {
             let v1 = onode.data[k],
                 v2 = nnode.data[k]
-            if (typeof v1 == typeof v2 && typeof v1 == 'function' ? v1.toString() != v2.toString() : ! Util.deepCompare(v1, v2))
+            let isFunc = typeof v1 == typeof v2 && typeof v1 == 'function'
+            if (isFunc ? v1.toString() != v2.toString() : ! Util.deepCompare(v1, v2))
                 onode.dom[k] = v2
         }
         for (let k in onode.data) {
@@ -115,14 +116,16 @@ export default class VDom {
             onode.dom.__viorCtx = nnode.ctx
         if (! nnode.tag && onode.text != nnode.text)
             onode.dom.data = nnode.text
-        if (onode.html != nnode.html)
+        let changeHtml = onode.html != nnode.html
+        if (changeHtml)
             onode.dom.innerHTML = nnode.html
-        
         nnode.dom = onode.dom
         if (! nnode.dom)
             return
+        
         this.moveNode(pdom, ldl, otree, onode, ntree, nnode)
-        this.patch(onode, nnode)
+        if (! changeHtml || ! nnode.html)
+            this.patch(onode, nnode)
     }
     newNode(pdom, ldl, otree, ntree, nnode) {
         let dom = nnode.tag ? document.createElement(nnode.tag) : (
@@ -142,9 +145,11 @@ export default class VDom {
         nnode.dom = dom
         this.moveNode(pdom, ldl, otree, null, ntree, nnode)
         
-        for (let k in nnode.children) {
-            let v = nnode.children[k]
-            this.newNode(dom, [], [], nnode.children, v)
+        if (! nnode.html) {
+            for (let k in nnode.children) {
+                let v = nnode.children[k]
+                this.newNode(dom, [], [], nnode.children, v)
+            }
         }
     }
     removeNode(pdom, ldl, onode) {
@@ -157,8 +162,10 @@ export default class VDom {
             return false
         if (onode.patched)
             return false
+        
         this.patchSameNode(pdom, ldl, otree, onode, ntree, nnode)
         onode.patched = true
+        
         return true
     }
     patch(onode, nnode) {

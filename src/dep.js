@@ -43,9 +43,10 @@ export default class Dep {
     }
     notify(tag) {
         let visInstance = this.visInstance
-        this.deps.forEach((v, k) => {
+        for (let vv of this.deps.entries()) {
+            let k = vv[0], v = vv[1]
             if (v.tags[tag] && typeof k == 'function')
                 k.call(visInstance)
-        })
+        }
     }
 }
