@@ -1,11 +1,13 @@
 export default class Dep {
-    static createDepContext(_this, func, key = '') {
+    static createDepContext(_this, func, favourTag = null, key = null) {
         let doit = () => {
             Dep.currentContext = doit
             Dep.currentContextKey = key
+            Dep.currentContextFavourTag = favourTag
             func.call(_this)
             Dep.currentContext = null
             Dep.currentContextKey = null
+            Dep.currentContextFavourTag = null
         }
         doit()
     }
@@ -31,9 +33,10 @@ export default class Dep {
             return
         
         let oriVal = this.deps.get(Dep.currentContext),
-            newVal = { tags: oriVal ? (oriVal.tags || {}) : {}, key: null }
+            newVal = { tags: oriVal ? (oriVal.tags || {}) : {}, key: null, favour: null }
         newVal.tags[tag] = true
         newVal.key = Dep.currentContextKey
+        newVal.favourTag = Dep.currentContextFavourTag
         this.deps.set(Dep.currentContext, newVal)
         
         let searchRes = this.searchDepByKey(Dep.currentContextKey)
@@ -45,7 +48,7 @@ export default class Dep {
         let visInstance = this.visInstance
         for (let vv of this.deps.entries()) {
             let k = vv[0], v = vv[1]
-            if (v.tags[tag] && typeof k == 'function')
+            if (v.tags[tag] && (v.favourTag ? v.favourTag == tag : true) && typeof k == 'function')
                 k.call(visInstance)
         }
     }

@@ -62,10 +62,8 @@ export default class Ref {
                 return true
             },
             deleteProperty(target, key) {
-                let changed = target.__rawValue[key]
                 delete target.__rawValue[key], target.__realValue[key]
-                if (changed)
-                    target.__deps.notify(target.__depTag || key)
+                target.__deps.notify(target.__depTag || key)
                 return true
             }
         })

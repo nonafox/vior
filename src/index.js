@@ -30,7 +30,7 @@ export default class Vis {
             Dep.createDepContext(this, function () {
                 void this.refs[k]
                 v.call(this)
-            })
+            }, k)
         }
     }
     triggerHook(name) {
