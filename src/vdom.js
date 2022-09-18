@@ -4,7 +4,7 @@ import Render from './render.js'
 export default class VDom {
     constructor(__this) {
         this.viorInstance = __this
-        this.render = new Render(__this)
+        this.render = new Render(__this, this)
     }
     mount(dom) {
         this.mounted = dom
@@ -14,7 +14,7 @@ export default class VDom {
     unmount() {
         this.mounted = this.originTree = this.currentTree = null
     }
-    read(dom, firstRead = true) {
+    read(dom, firstRead = true, falseDom = false) {
         let tree = []
         let children = ! firstRead ? Object.assign({}, dom.childNodes) : [dom]
         for (let k in children) {
@@ -27,15 +27,14 @@ export default class VDom {
             }
             
             tree.push({
-                dom: v,
+                dom: ! falseDom ? v : null,
                 tag: v.tagName ? v.tagName.toLowerCase() : null,
                 type: firstRead ? 'root' : (v.tagName ? 'common' : v.nodeName.substr(1)),
                 attrs: attrs,
                 ctx: {},
                 data: {},
-                html: null,
                 text: ! v.tagName ? v.data : null,
-                children: this.read(v, false) || null
+                children: this.read(v, false, falseDom) || null
             })
         }
         
@@ -116,16 +115,12 @@ export default class VDom {
             onode.dom.__viorCtx = nnode.ctx
         if (! nnode.tag && onode.text != nnode.text)
             onode.dom.data = nnode.text
-        let changeHtml = onode.html != nnode.html
-        if (changeHtml)
-            onode.dom.innerHTML = nnode.html
         nnode.dom = onode.dom
         if (! nnode.dom)
             return
         
         this.moveNode(pdom, ldl, otree, onode, ntree, nnode)
-        if (! changeHtml || ! nnode.html)
-            this.patch(onode, nnode)
+        this.patch(onode, nnode)
     }
     newNode(pdom, ldl, otree, ntree, nnode) {
         let dom = nnode.tag ? document.createElement(nnode.tag) : (
@@ -140,8 +135,6 @@ export default class VDom {
             dom[k] = v
         }
         dom.__viorCtx = nnode.ctx
-        if (nnode.html)
-            dom.innerHTML = nnode.html
         nnode.dom = dom
         this.moveNode(pdom, ldl, otree, null, ntree, nnode)
         

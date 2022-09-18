@@ -1,4 +1,7 @@
 export default {
+    singleTags: ['br', 'hr', 'area', 'base', 'img', 'input', 'link', 'meta', 'basefont',
+                 'param', 'col', 'frame', 'embed', 'keygen', 'source'],
+    
     triggerError(desc, name, code, ex) {
         console.group('[Vior error]:')
         console.group('Describe: ')
@@ -17,7 +20,7 @@ export default {
         throw new Error('[Vior error]')
     },
     isPlainObject(obj) {
-        // refer to: https://segmentfault.com/a/1190000013338935
+        // From: https://segmentfault.com/a/1190000013338935
         
         if (! obj)
             return
@@ -29,8 +32,9 @@ export default {
             let proto = Object.getPrototypeOf(obj)
             if (! proto)
                 return false
-            let ctor = hasOwn.call(proto, 'constructor') && proto.constructor
-            return typeof ctor == 'function' && hasOwn.toString.call(ctor) == hasOwn.toString.call(Object)
+            let ctor = hasOwn.call(proto, 'constructor') && proto.constructor,
+                cond = hasOwn.toString.call(ctor) == hasOwn.toString.call(Object)
+            return typeof ctor == 'function' && cond
         } else {
             return false
         }

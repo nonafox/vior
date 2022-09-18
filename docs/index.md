@@ -1,2 +1,2 @@
 # Coming soon...
-I haven't finished the documents yet! You can see the TODO demo in [`/test/index.html`](https://github.com/jwhgzs/vior/blob/main/test/index.html)
+I haven't finished the documents yet! You can see a TODO demo in [`/test/index.html`](https://github.com/jwhgzs/vior/blob/main/test/index.html), and you can learn what Vior will do for you in it.

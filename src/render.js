@@ -1,10 +1,13 @@
 import Util from './util.js'
 import Dep from './dep.js'
 import Ref from './ref.js'
+import TDom from './tdom.js'
 
 export default class Render {
-    constructor(viorIns) {
+    constructor(viorIns, vdom) {
         this.viorInstance = viorIns
+        this.vdom = vdom
+        this.tdom = new TDom(vdom)
     }
     insertNode(pvlist, svnode, vnode) {
         let i = pvlist.indexOf(svnode)
@@ -127,7 +130,8 @@ export default class Render {
                 if (! (! res && res2))
                     vnode.deleted = true
             } else if (key == 'html') {
-                vnode.html = this.runInContext(vnode, key, val)
+                let res = this.runInContext(vnode, key, val)
+                vnode.children = this.tdom.read(res).children
             }
         } catch (ex) {
             Util.triggerError('Command error', oriKey, val, ex)
