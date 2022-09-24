@@ -1,17 +1,21 @@
 import Util from './util.js'
 import VDom from './vdom.js'
+import Renderer from './renderer.js'
 import Dep from './dep.js'
 import Ref from './ref.js'
 
-export default class Vis {
+export default class Vior {
     constructor(opts) {
-        this.vdom = new VDom(this)
-        this.opts = opts
+        this.uniqueId = 'VisInstance_' + Math.floor(Math.random() * 1e8)
+        this.vdom = new VDom()
+        this.renderer = new Renderer(this)
         
+        this.opts = opts
         this.funcs = opts.funcs || {}
         this.refs = Ref.createRef(this, opts.refs ? opts.refs() : {})
         this.handleDynamicRefs()
         this.handleWatchers()
+        
         this.triggerHook('created')
     }
     handleDynamicRefs() {
@@ -43,18 +47,34 @@ export default class Vis {
         }
     }
     mount(elm) {
-        this.vdom.mount(elm)
-        Dep.createDepContext(this, function () {
-            this.vdom.update()
-        })
-        this.triggerHook('mounted')
+        this.mounted = elm
+        this.originVTree = this.vdom.read(elm)
+        this.currentVTree = Util.deepCopy(this.originVTree)
         
+        Dep.createDepContext(this, function () {
+            this.update()
+        })
+        
+        this.triggerHook('mounted')
         return this
     }
-    unmount() {
-        this.vdom.unmount()
-        this.triggerHook('unmounted')
+    update() {
+        if (! this.mounted)
+            return
         
+        let vdom = this.vdom,
+            renderer = this.renderer
+        let oldVTree = this.currentVTree,
+            newVTree = renderer.render(this.originVTree)
+        vdom.patch(oldVTree, newVTree)
+        this.currentVTree = newVTree
+    }
+    unmount() {
+        this.mounted = null
+        this.originVTree = null
+        this.currentVTree = null
+        
+        this.triggerHook('unmounted')
         return this
     }
 }

@@ -1,19 +1,6 @@
 import Util from './util.js'
-import Render from './render.js'
 
 export default class VDom {
-    constructor(__this) {
-        this.viorInstance = __this
-        this.render = new Render(__this, this)
-    }
-    mount(dom) {
-        this.mounted = dom
-        this.originTree = this.read(dom)
-        this.currentTree = Util.deepCopy(this.originTree)
-    }
-    unmount() {
-        this.mounted = this.originTree = this.currentTree = null
-    }
     read(dom, firstRead = true, falseDom = false) {
         let tree = []
         let children = ! firstRead ? Object.assign({}, dom.childNodes) : [dom]
@@ -39,6 +26,13 @@ export default class VDom {
         }
         
         return ! firstRead ? tree : tree[0]
+    }
+    readFromText(text) {
+        let parser = new DOMParser()
+        let _root = parser.parseFromString(text, 'text/html'),
+            root = _root.childNodes[0].childNodes[1]
+        let res = this.read(root, true, true)
+        return res
     }
     isSameNode(vnode1, vnode2) {
         if (! vnode1 || ! vnode2)
@@ -219,13 +213,32 @@ export default class VDom {
                 this.removeNode(pdom, ldl, v)
         }
     }
-    update() {
-        if (! this.mounted)
-            return
+    patchFromText(tree) {
+        if (! Array.isArray(tree))
+            return this.patchFromText(tree.children)
         
-        let oldTree = this.currentTree,
-            newTree = this.render.render(this.originTree)
-        this.patch(oldTree, newTree)
-        this.currentTree = newTree
+        let res = ''
+        for (let k in tree) {
+            let v = tree[k],
+                singleTag = Util.singleTags.indexOf(v.tag) >= 0
+            
+            if (v.tag) {
+                let children = v.children.length ? this.patchFromText(v.children) : '',
+                    attrs = ''
+                for (let k2 in v.attrs) {
+                    let v2 = v.attrs[k2] + ''
+                    v2 = v2.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+                    attrs += ` ${k2}="${v2}"`
+                }
+                res += `<${v.tag}${attrs}${singleTag ? '/' : ''}>${children}${singleTag ? '' : `</${v.tag}>`}`
+            } else if (v.type == 'text') {
+                res += v.text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/(\s|&nbsp;)+/g, ' ')
+                             .replace(/'/g, '&#39;').replace(/"/g, '&quot;')
+            } else if (v.type == 'comment') {
+                res += `<!--${v.text}-->`
+            }
+        }
+        
+        return res
     }
 }
