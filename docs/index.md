@@ -5,15 +5,15 @@ I'm just a junior school student, so that I haven't much time to finish the full
 Here is a pretty simple counter demo.
 ```html
 <div id="app">
-	<!--
-		- '@click' is a Vior DOM event, equals the native DOM event 'onclick'
-		- ':disabled' is a Vior DOM attribute
-		-->
+    <!--
+        - '@click' is a Vior DOM event, equals the native DOM event 'onclick'
+        - ':disabled' is a Vior DOM attribute
+        -->
     <button @click="count ++" :disabled="count >= 10">
-		Count:
-		<!-- ↓ This is a Vior DOM template -->
-		{{ count }}
-	</button>
+        Count:
+        <!-- ↓ This is a Vior DOM template -->
+        {{ count }}
+    </button>
 </div>
 ```
 ```javascript
@@ -21,10 +21,10 @@ import Vior from 'https://unpkg.com/vior'
 
 let viorIns = new Vior({
     refs() {
-	    return {
-			count: 0
-		}
-	}
+        return {
+            count: 0
+        }
+    }
 }).mount(document.getElementById('app'))
 ```
 
@@ -42,8 +42,8 @@ This is another version of the counter demo:
 ```html
 <div id="app">
     <button @click="increase()" :disabled="count >= 10">
-		Count: {{ count }}
-	</button>
+        Count: {{ count }}
+    </button>
 </div>
 ```
 ```javascript
@@ -51,19 +51,19 @@ import Vior from 'https://unpkg.com/vior'
 
 let viorIns = new Vior({
     refs() {
-	    return {
-			count: 0
-		}
-	},
-	funcs: {
-		increase() {
-			// Call another Vior function, just for demo of course!
-			this.funcs.doit()
-		},
-		doit() {
-			this.refs.count ++
-		}
-	}
+        return {
+            count: 0
+        }
+    },
+    funcs: {
+        increase() {
+            // Call another Vior function, just for demo of course!
+            this.funcs.doit()
+        },
+        doit() {
+            this.refs.count ++
+        }
+    }
 }).mount(document.getElementById('app'))
 ```
 It works as same as the first one. We just make the increase feature in a Vior function in JS instead of do that in the DOM event directly.
@@ -77,16 +77,16 @@ You can add some functions in the `funcs` option, and you can call them in "any"
 Here is a imperfect TODO list demo:
 ```html
 <div id="app">
-	<h1>TODO list</h1>
-	<hr/>
-	<ul>
-		<li $for="(k, v) in list">
-			{{ k + 1 }}: {{ v }}
-			<button @click="del(k)">delete</button>
-		</li>
-	</ul>
-	<div $if="list.length">You have something to do!</div>
-	<div $else>Nothing to do~</div>
+    <h1>TODO list</h1>
+    <hr/>
+    <ul>
+        <li $for="(k, v) in list">
+            {{ k + 1 }}: {{ v }}
+            <button @click="del(k)">delete</button>
+        </li>
+    </ul>
+    <div $if="list.length">You have something to do!</div>
+    <div $else>Nothing to do~</div>
 </div>
 ```
 ```javascript
@@ -94,19 +94,19 @@ import Vior from 'https://unpkg.com/vior'
 
 let viorIns = new Vior({
     refs() {
-	    return {
-			list: ['leave school', 'finish the homework', 'practise the piano', 'start programming']
-		}
-	},
-	funcs: {
-		add() {
-			this.refs.list.push(refs.inputVal)
-			this.refs.inputVal = ''
-		},
-		del(id) {
-			this.refs.list.splice(id, 1)
-		}
-	}
+        return {
+            list: ['leave school', 'finish the homework', 'practise the piano', 'start programming']
+        }
+    },
+    funcs: {
+        add() {
+            this.refs.list.push(refs.inputVal)
+            this.refs.inputVal = ''
+        },
+        del(id) {
+            this.refs.list.splice(id, 1)
+        }
+    }
 }).mount(document.getElementById('app'))
 ```
 This demo shows the often-used commands in Vior. Here are more details:
@@ -120,15 +120,15 @@ This demo shows the often-used commands in Vior. Here are more details:
 A "easy" input demo:
 ```html
 <div id="app">
-	<input @input::value="inputValue" @input="console.log('oninput!')"/>
-	You input: {{ inputValue }}
+    <input @input::value="inputValue" @input="console.log('oninput!')"/>
+    You input: {{ inputValue }}
 </div>
 ```
 ```javascript
 let viorIns = new Vior({
-	refs() {
-		inputValue: 'default value'
-	}
+    refs() {
+        inputValue: 'default value'
+    }
 })
 ```
 You can see the input's property `value` is bind with the reactive variable `inputValue`. This is TBV's work!
@@ -145,17 +145,17 @@ It is a bit difficult to understand, because I may be the inventor of this kind 
 A demo which does nothing:
 ```js
 let viorIns = new Vior({
-	hooks: {
-		created() {
-			console.log('Vior instance created!')
-		},
-		mounted() {
-			console.log('Vior instance mounted to real DOM!')
-		},
-		unmounted() {
-			console.log('Vior instance unmounted!')
-		}
-	}
+    hooks: {
+        created() {
+            console.log('Vior instance created!')
+        },
+        mounted() {
+            console.log('Vior instance mounted to real DOM!')
+        },
+        unmounted() {
+            console.log('Vior instance unmounted!')
+        }
+    }
 })
 ```
 The demo shows all the lifecycle hooks in Vior. Vior will trigger different hooks in different lifecycle stage.
@@ -169,19 +169,19 @@ let viorIns = new Vior({
     refs() {
         text: 'hello, world'
     },
-	hooks: {
-		created() {
-			// This will change the reactive variable 'text' every second
-			setInterval(function() {
-				this.refs.text = this.refs.text.split('').reverse().join('')
-			}, 1000)
-		}
-	},
-	watchers: {
-		text() {
-			console.log('text is changed!')
-		}
-	}
+    hooks: {
+        created() {
+            // This will change the reactive variable 'text' every second
+            setInterval(function() {
+                this.refs.text = this.refs.text.split('').reverse().join('')
+            }, 1000)
+        }
+    },
+    watchers: {
+        text() {
+            console.log('text is changed!')
+        }
+    }
 })
 ```
 In this demo, when the reactive variable `text` is changed, watcher `text` will be triggered, and do `console.log(...)`.
