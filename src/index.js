@@ -11,12 +11,22 @@ export default class Vior {
         this.renderer = new Renderer(this)
         
         this.opts = opts
-        this.funcs = opts.funcs || {}
+        this.handleFunctions()
         this.refs = Ref.createRef(this, opts.refs ? opts.refs() : {})
         this.handleDynamicRefs()
         this.handleWatchers()
         
         this.triggerHook('created')
+    }
+    handleFunctions() {
+        this.funcs = {}
+        for (let k in this.opts.funcs) {
+            let v = this.opts.funcs[k],
+                _this = this
+            this.funcs[k] = function (...args) {
+                _this.opts.funcs[k].call(_this, ...args)
+            }
+        }
     }
     handleDynamicRefs() {
         for (let k in this.refs) {
