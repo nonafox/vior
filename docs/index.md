@@ -210,7 +210,7 @@ Here is nearly the full version of the TODO list demo:
 </div>
 ```
 ```javascript
-import Vior from '../src/index.js'
+import Vior from 'https://unpkg.com/vior'
 
 let refs, funcs
 let viorIns = new Vior({
