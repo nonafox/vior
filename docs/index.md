@@ -32,9 +32,9 @@ This demo shows the core of Vior. As you see, it is completely the same as Vue!
 
 The only difference is the option name `refs`, it is the same as Vue's `data` option, it takes a function which returns a object with your default reactive variables.
 
-**You can use your reactive variables in "any" place (where you think it can, in such as Vior DOM events**, **DOM attributes**, **DOM templates).**
+**You can use your reactive variables in "any" place (where you think it can, in such as Vior DOM events, DOM attributes, DOM templates and Vior's options).**
 
-And here are some available special inner variable in HTML part:
+And here are some available special inner variables in HTML part:
 - `$args`: storages the native event arguments' array (in JS), basicly the first argument is a native DOM event object. Can only be used in Vior DOM events' context.
 
 # Functions
@@ -248,11 +248,11 @@ Don't be scare! It is easy. In fact, it contains almost all content we have lear
 
 Look at the reactive variable `total`. It is defined in `refs` option, and its value is a function. This is actually a dynamic variable (just a kind of reactive variable)!
 
-When you add a function variable in `refs` option, Vior will treat it as a dynamic variable: **that means the function's callback value will "always" sync to the variable's value. When the reactive variables in the function are changed, the variable's value will auto update.**
+When you add a function variable in `refs` option, Vior will treat it as a dynamic variable: **that means the function's callback value will "always" sync to the dynamic variable's value. When the reactive variables in the function are changed, the dynamic variable's value will auto update.**
 
 But remember, this is based on dependencies traking, just like Vue. Vior will only watch on your reactive variables' changes in the function, other things in the function like `Date.now()`'s changes, Vior won't do with them!
 
-**There is a notice between common functions and dynamic variables: common functions don't have auto-update feature, that means when you use a common function in Vior DOM attribute, the attribute's value will always be the first callback value of the common function.**
+**There is a notice between common functions and dynamic variables: common functions don't have auto-update feature, that means when you use a common function in Vior DOM attribute, the attribute's value will never change although the funtion's callback is probably changed!**
 
 # At last
-As you see, Vior is only a own-made copy of Vue, I just had a play. Never use Vior in your project!
+As you see, Vior is only a own-made copy of Vue, I just make this for practice. Never use Vior in your project!

@@ -1,6 +1,6 @@
 {
   "name": "vior",
-  "version": "0.2.25",
+  "version": "0.2.26",
   "description": "A mini copy of Vue made on my own.",
   "main": "src/index.js",
   "directories": {
