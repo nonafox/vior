@@ -165,15 +165,19 @@ You can define your own hooks in the `hooks` option. I think I don't need to exp
 # Watchers
 This is a nearly useless demo:
 ```javascript
+
 let viorIns = new Vior({
     vars() {
-        text: 'hello, world'
+        return {
+            text: 'hello, world'
+        }
     },
     hooks: {
         created() {
+            let _this = this
             // This will change the reactive variable 'text' every second
             setInterval(function() {
-                this.vars.text = this.vars.text.split('').reverse().join('')
+                _this.vars.text = _this.vars.text.split('').reverse().join('')
             }, 1000)
         }
     },

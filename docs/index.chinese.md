@@ -166,13 +166,16 @@ let viorIns = new Vior({
 ```javascript
 let viorIns = new Vior({
     vars() {
-        text: 'hello, world'
+        return {
+            text: 'hello, world'
+        }
     },
     hooks: {
         created() {
+            let _this = this
             // 每秒改动一次响应性变量'text'的值
             setInterval(function() {
-                this.vars.text = this.vars.text.split('').reverse().join('')
+                _this.vars.text = _this.vars.text.split('').reverse().join('')
             }, 1000)
         }
     },
