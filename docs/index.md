@@ -20,7 +20,7 @@ Here is a pretty simple counter demo.
 import Vior from 'https://unpkg.com/vior'
 
 let viorIns = new Vior({
-    refs() {
+    vars() {
         return {
             count: 0
         }
@@ -30,7 +30,7 @@ let viorIns = new Vior({
 
 This demo shows the core of Vior. As you see, it is completely the same as Vue!
 
-The only difference is the option name `refs`, it is the same as Vue's `data` option, it takes a function which returns a object with your default reactive variables.
+The only difference is the option name `vars`, it is the same as Vue's `data` option, it takes a function which returns a object with your default reactive variables.
 
 **You can use your reactive variables in "any" place (where you think it can, in such as Vior DOM events, DOM attributes, DOM templates and Vior's options).**
 
@@ -50,7 +50,7 @@ This is another version of the counter demo:
 import Vior from 'https://unpkg.com/vior'
 
 let viorIns = new Vior({
-    refs() {
+    vars() {
         return {
             count: 0
         }
@@ -61,7 +61,7 @@ let viorIns = new Vior({
             this.funcs.doit()
         },
         doit() {
-            this.refs.count ++
+            this.vars.count ++
         }
     }
 }).mount(document.getElementById('app'))
@@ -70,7 +70,7 @@ It works as same as the first one. We just make the increase feature in a Vior f
 
 You can add some functions in the `funcs` option, and you can call them in "any" place. **Notice! The way to do with reactive variables and functions in JS part is different from HTML's**. As you see, when in JS's context, you need to:
 
-- `this.refs.xxx` to use reactive variables
+- `this.vars.xxx` to use reactive variables
 - `this.funcs.xxx` to use functions
 
 # Commands
@@ -93,18 +93,18 @@ Here is a imperfect TODO list demo:
 import Vior from 'https://unpkg.com/vior'
 
 let viorIns = new Vior({
-    refs() {
+    vars() {
         return {
             list: ['leave school', 'finish the homework', 'practise the piano', 'start programming']
         }
     },
     funcs: {
         add() {
-            this.refs.list.push(refs.inputVal)
-            this.refs.inputVal = ''
+            this.vars.list.push(vars.inputVal)
+            this.vars.inputVal = ''
         },
         del(id) {
-            this.refs.list.splice(id, 1)
+            this.vars.list.splice(id, 1)
         }
     }
 }).mount(document.getElementById('app'))
@@ -126,7 +126,7 @@ A "easy" input demo:
 ```
 ```javascript
 let viorIns = new Vior({
-    refs() {
+    vars() {
         inputValue: 'default value'
     }
 })
@@ -166,14 +166,14 @@ You can define your own hooks in the `hooks` option. I think I don't need to exp
 This is a nearly useless demo:
 ```javascript
 let viorIns = new Vior({
-    refs() {
+    vars() {
         text: 'hello, world'
     },
     hooks: {
         created() {
             // This will change the reactive variable 'text' every second
             setInterval(function() {
-                this.refs.text = this.refs.text.split('').reverse().join('')
+                this.vars.text = this.vars.text.split('').reverse().join('')
             }, 1000)
         }
     },
@@ -212,14 +212,14 @@ Here is nearly the full version of the TODO list demo:
 ```javascript
 import Vior from 'https://unpkg.com/vior'
 
-let refs, funcs
+let vars, funcs
 let viorIns = new Vior({
-    refs() {
+    vars() {
         return {
             list: ['leave school', 'finish the homework', 'practise the piano', 'start programming'],
             inputVal: '',
             total() {
-                let text = this.refs.list.join(', ')
+                let text = this.vars.list.join(', ')
                 if (text)
                     return '<strong>You need to do: </strong>' + text
                 else
@@ -229,26 +229,26 @@ let viorIns = new Vior({
     },
     hooks: {
         created() {
-            refs = this.refs
+            vars = this.vars
             funcs = this.funcs
         }
     },
     funcs: {
         add() {
-            refs.list.push(refs.inputVal)
-            refs.inputVal = ''
+            vars.list.push(vars.inputVal)
+            vars.inputVal = ''
         },
         del(id) {
-            refs.list.splice(id, 1)
+            vars.list.splice(id, 1)
         }
     }
 }).mount(document.getElementById('app'))
 ```
 Don't be scare! It is easy. In fact, it contains almost all content we have learnt above. But there is something new.
 
-Look at the reactive variable `total`. It is defined in `refs` option, and its value is a function. This is actually a dynamic variable (just a kind of reactive variable)!
+Look at the reactive variable `total`. It is defined in `vars` option, and its value is a function. This is actually a dynamic variable (just a kind of reactive variable)!
 
-When you add a function variable in `refs` option, Vior will treat it as a dynamic variable: **that means the function's callback value will "always" sync to the dynamic variable's value. When the reactive variables in the function are changed, the dynamic variable's value will auto update.**
+When you add a function variable in `vars` option, Vior will treat it as a dynamic variable: **that means the function's callback value will "always" sync to the dynamic variable's value. When the reactive variables in the function are changed, the dynamic variable's value will auto update.**
 
 But remember, this is based on dependencies traking, just like Vue. Vior will only watch on your reactive variables' changes in the function, other things in the function like `Date.now()`'s changes, Vior won't do with them!
 

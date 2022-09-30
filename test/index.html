@@ -25,14 +25,14 @@
         <script type="module">
             import Vior from '../src/index.js'
             
-            let refs, funcs
+            let vars, funcs
             let viorIns = new Vior({
-                refs() {
+                vars() {
                     return {
                         list: ['leave school', 'finish the homework', 'practise the piano', 'start programming'],
                         inputVal: '',
                         total() {
-                            let text = this.refs.list.join(', ')
+                            let text = this.vars.list.join(', ')
                             if (text)
                                 return '<strong>You need to do: </strong>' + text
                             else
@@ -42,17 +42,17 @@
                 },
                 hooks: {
                     created() {
-                        refs = this.refs
+                        vars = this.vars
                         funcs = this.funcs
                     }
                 },
                 funcs: {
                     add() {
-                        refs.list.push(refs.inputVal)
-                        refs.inputVal = ''
+                        vars.list.push(vars.inputVal)
+                        vars.inputVal = ''
                     },
                     del(id) {
-                        refs.list.splice(id, 1)
+                        vars.list.splice(id, 1)
                     }
                 },
                 watchers: {

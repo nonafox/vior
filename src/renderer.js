@@ -19,7 +19,7 @@ export default class Renderer {
         return eval(__code)
     }
     runInContext(vnode, key, code, isEvt = false) {
-        let refKeysArr = Object.keys(this.viorInstance.refs.__getRaw()),
+        let refKeysArr = Object.keys(this.viorInstance.vars.__getRaw()),
             refKeys = refKeysArr.join(', '),
             funcKeysArr = Object.keys(this.viorInstance.funcs),
             ctxKeys = Object.keys(vnode.ctx).join(', '),
@@ -35,7 +35,7 @@ export default class Renderer {
         let refsSyncSetup = '', refKeys_origin = []
         for (let kk in refKeysArr) {
             let k = refKeysArr[kk]
-            refsSyncSetup += `if (__origin_value__${k} !== ${k}) { $this.refs.${k} = ${k} }; `
+            refsSyncSetup += `if (__origin_value__${k} !== ${k}) { $this.vars.${k} = ${k} }; `
             refKeys_origin.push(`${k}: __origin_value__${k}`)
         }
         refKeys_origin = refKeys_origin.join(', ')
@@ -45,8 +45,8 @@ export default class Renderer {
                 let __syncRefs = () => {
                         ${refsSyncSetup}
                     }
-                let { ${refKeys} } = $this.refs,
-                    { ${refKeys_origin} } = $this.refs,
+                let { ${refKeys} } = $this.vars,
+                    { ${refKeys_origin} } = $this.vars,
                     { ${ctxKeys} } = ${ctxSetup};
                 ${funcsSetup}
                 ${code};
@@ -152,7 +152,7 @@ export default class Renderer {
                             propName = propName[1]
                             newKey = newKey.replace(reg, '')
                             
-                            vnode.data[propName] = this.viorInstance.refs[val]
+                            vnode.data[propName] = this.viorInstance.vars[val]
                             val = `${val} = this.${propName}; $args[0].preventDefault()`
                         }
                         

@@ -22,7 +22,7 @@
 import Vior from 'https://unpkg.com/vior'
 
 let viorIns = new Vior({
-    refs() {
+    vars() {
         return {
             count: 0
         }
@@ -31,7 +31,7 @@ let viorIns = new Vior({
 ```
 这个实例展示了Vior的核心功能——如你所见，这与Vue完全一样！
 
-唯一的区别在于`refs` option。它的期望值是一个具有Array或Object返回值的函数，你可以在这个返回值中定义Vior的响应式变量。**然后你就可以在“任意”地方（如HTML部分中基于Vior的事件、attributes、模板，以及JS部分中Vior的各个options等）使用它们。**
+唯一的区别在于`vars` option。它的期望值是一个具有Array或Object返回值的函数，你可以在这个返回值中定义Vior的响应式变量。**然后你就可以在“任意”地方（如HTML部分中基于Vior的事件、attributes、模板，以及JS部分中Vior的各个options等）使用它们。**
 
 Vior还提供了一些特殊的内部变量：
 - `$args`：保存当前原生DOM事件的参数数组，一般情况下数组第一个成员为原生的DOM事件对象。只能在Vior的DOM事件中使用。
@@ -49,7 +49,7 @@ Vior还提供了一些特殊的内部变量：
 import Vior from 'https://unpkg.com/vior'
 
 let viorIns = new Vior({
-    refs() {
+    vars() {
         return {
             count: 0
         }
@@ -60,7 +60,7 @@ let viorIns = new Vior({
             this.funcs.doit()
         },
         doit() {
-            this.refs.count ++
+            this.vars.count ++
         }
     }
 }).mount(document.getElementById('app'))
@@ -69,7 +69,7 @@ let viorIns = new Vior({
 
 像这样，你可以在`funcs` option里添加一些函数，然后可以在“任意”地方调用它们。**注意！在Vior的JS部分（options）中，调用响应性变量和函数的方式与HTML部分的直接调用不同，你需要这么干：**
 
-- 使用Vior响应性变量：`this.refs.xxx`
+- 使用Vior响应性变量：`this.vars.xxx`
 - 使用Vior函数：`this.funcs.xxx`
 
 # 命令
@@ -92,18 +92,18 @@ let viorIns = new Vior({
 import Vior from 'https://unpkg.com/vior'
 
 let viorIns = new Vior({
-    refs() {
+    vars() {
         return {
             list: ['周五放学', '做作业', '练琴', '开始编程！']
         }
     },
     funcs: {
         add() {
-            this.refs.list.push(refs.inputVal)
-            this.refs.inputVal = ''
+            this.vars.list.push(vars.inputVal)
+            this.vars.inputVal = ''
         },
         del(id) {
-            this.refs.list.splice(id, 1)
+            this.vars.list.splice(id, 1)
         }
     }
 }).mount(document.getElementById('app'))
@@ -125,7 +125,7 @@ let viorIns = new Vior({
 ```
 ```javascript
 let viorIns = new Vior({
-    refs() {
+    vars() {
         inputValue: 'default value'
     }
 })
@@ -165,14 +165,14 @@ let viorIns = new Vior({
 这又是一个没用的实例：
 ```javascript
 let viorIns = new Vior({
-    refs() {
+    vars() {
         text: 'hello, world'
     },
     hooks: {
         created() {
             // 每秒改动一次响应性变量'text'的值
             setInterval(function() {
-                this.refs.text = this.refs.text.split('').reverse().join('')
+                this.vars.text = this.vars.text.split('').reverse().join('')
             }, 1000)
         }
     },
@@ -211,14 +211,14 @@ let viorIns = new Vior({
 ```javascript
 import Vior from 'https://unpkg.com/vior'
 
-let refs, funcs
+let vars, funcs
 let viorIns = new Vior({
-    refs() {
+    vars() {
         return {
             list: ['周五放学', '做作业', '练琴', '开始编程！'],
             inputVal: '',
             total() {
-                let text = this.refs.list.join(', ')
+                let text = this.vars.list.join(', ')
                 if (text)
                     return '<strong>待办事项合计：</strong>' + text
                 else
@@ -228,24 +228,24 @@ let viorIns = new Vior({
     },
     hooks: {
         created() {
-            refs = this.refs
+            vars = this.vars
             funcs = this.funcs
         }
     },
     funcs: {
         add() {
-            refs.list.push(refs.inputVal)
-            refs.inputVal = ''
+            vars.list.push(vars.inputVal)
+            vars.inputVal = ''
         },
         del(id) {
-            refs.list.splice(id, 1)
+            vars.list.splice(id, 1)
         }
     }
 }).mount(document.getElementById('app'))
 ```
 别看代码这么长，其实很简单，只是综合了我们之前讲过的功能，当然也有一点新的东西。
 
-看到`refs` option中的响应性变量`total`，它与其他的变量不同，它被赋值为一个函数，而Vior会将其视作为一个“动态变量”——它和普通的响应性变量一样，但是它的真实值来自于初始值函数的返回值。最牛逼的是，当函数内引用的响应式变量发生改变，动态变量的真实值也会自动变更！也就是说，动态变量的值“永远”等于初始函数的返回值，即使初始函数的返回值会变更。
+看到`vars` option中的响应性变量`total`，它与其他的变量不同，它被赋值为一个函数，而Vior会将其视作为一个“动态变量”——它和普通的响应性变量一样，但是它的真实值来自于初始值函数的返回值。最牛逼的是，当函数内引用的响应式变量发生改变，动态变量的真实值也会自动变更！也就是说，动态变量的值“永远”等于初始函数的返回值，即使初始函数的返回值会变更。
 
 但是有一点例外。**Vior只会监听响应性变量的值，其他值变更（如`Date.now()`）不会触发动态变量的真实值更新。**这是因为Vior采用和Vue一样的——依赖追踪技术。
 

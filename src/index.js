@@ -12,7 +12,7 @@ export default class Vior {
         
         this.opts = opts
         this.handleFunctions()
-        this.refs = Ref.createRef(this, opts.refs ? opts.refs() : {})
+        this.vars = Ref.createRef(this, opts.vars ? opts.vars() : {})
         this.handleDynamicRefs()
         this.handleWatchers()
         
@@ -29,11 +29,11 @@ export default class Vior {
         }
     }
     handleDynamicRefs() {
-        for (let k in this.refs) {
-            let v = this.refs[k]
+        for (let k in this.vars) {
+            let v = this.vars[k]
             if (typeof v == 'function') {
                 Dep.createDepContext(this, function () {
-                    this.refs[k] = v.call(this)
+                    this.vars[k] = v.call(this)
                 })
             }
         }
@@ -42,7 +42,7 @@ export default class Vior {
         for (let k in this.opts.watchers) {
             let v = this.opts.watchers[k]
             Dep.createDepContext(this, function () {
-                void this.refs[k]
+                void this.vars[k]
                 v.call(this)
             }, k)
         }
