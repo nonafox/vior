@@ -1,23 +1,23 @@
 {
-  "name": "vior",
-  "version": "0.2.29",
-  "description": "A mini copy of Vue made on my own.",
-  "main": "src/index.js",
-  "directories": {
-    "test": "test"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jwhgzs/vior.git"
-  },
-  "keywords": ["vue", "js", "vior", "react", "jwhgzs"],
-  "author": "jwhgzs",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/jwhgzs/vior/issues"
-  },
-  "homepage": "https://github.com/jwhgzs/vior#readme"
+    "name": "vior",
+    "version": "0.2.30",
+    "description": "A mini copy of Vue made on my own.",
+    "main": "src/index.js",
+    "directories": {
+        "test": "test"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/jwhgzs/vior.git"
+    },
+    "keywords": ["vue", "js", "vior", "react", "jwhgzs"],
+    "author": "jwhgzs",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/jwhgzs/vior/issues"
+    },
+    "homepage": "https://github.com/jwhgzs/vior#readme"
 }

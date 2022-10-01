@@ -6,7 +6,14 @@
     </head>
     <body>
         <div id="app">
-            <h3>Powered by Vior</h3>
+            <h1>{{ a }}</h1>
+            {{ '1' }}
+            
+            
+            
+            
+            <h1>{{ a }}</h1>
+            {{ '2' }}
         </div>
         <script type="module">
             import Vior from '../src/index.js'
@@ -14,24 +21,16 @@
             let viorIns = new Vior({
                 vars() {
                     return {
-                        text: 'hello, world'
+                        a: 1
                     }
                 },
                 hooks: {
-                    created() {
+                    mounted() {
                         let _this = this
-                        // 每秒改动一次响应性变量'text'的值
-                        setInterval(function() {
-                            _this.vars.text = _this.vars.text.split('').reverse().join('')
-                        }, 1000)
-                    }
-                },
-                watchers: {
-                    text() {
-                        console.log('响应性变量变量 text 改变了！')
+                        setInterval(() => _this.vars.a += 1, 1000)
                     }
                 }
-            })
+            }).mount(document.getElementById('app'))
         </script>
     </body>
 </html>

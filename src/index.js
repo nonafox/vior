@@ -10,13 +10,29 @@ export default class Vior {
         this.vdom = new VDom()
         this.renderer = new Renderer(this)
         
+        if (opts.html) {
+            this.html = opts.html
+            this.originVTree = this.vdom.readFromText(opts.html)
+            this.isComponent = true
+        }
+        
         this.opts = opts
         this.handleFunctions()
         this.vars = Ref.createRef(this, opts.vars ? opts.vars() : {})
         this.handleDynamicRefs()
         this.handleWatchers()
+        this.handleComponents()
         
         this.triggerHook('created')
+    }
+    triggerHook(name) {
+        if (this.opts.hooks && this.opts.hooks[name]) {
+            try {
+                this.opts.hooks[name].call(this)
+            } catch (ex) {
+                Util.triggerError('Runtime error', '(hook) ' + name, '', ex)
+            }
+        }
     }
     handleFunctions() {
         this.funcs = {}
@@ -47,16 +63,27 @@ export default class Vior {
             }, k)
         }
     }
-    triggerHook(name) {
-        if (this.opts.hooks && this.opts.hooks[name]) {
-            try {
-                this.opts.hooks[name].call(this)
-            } catch (ex) {
-                Util.triggerError('Runtime error', '(hook) ' + name, '', ex)
-            }
+    handleComponents() {
+        if (this.isComponent)
+            return
+        
+        this.cachedComponentIns = {}
+        this.componentNames = Object.keys(this.opts.comps || {})
+        this.componentTags = []
+        for (let k in this.componentNames) {
+            let v = this.componentNames[k]
+            let tmp = v.replace(/([A-Z]{1})/g, '-$1').split('-')
+            tmp.splice(0, 1)
+            for (let k2 in tmp)
+                tmp[k2] = tmp[k2].toLowerCase()
+            v = tmp.join('-')
+            this.componentTags[k] = v
         }
     }
     mount(elm) {
+        if (this.isComponent)
+            return
+        
         this.mounted = elm
         this.originVTree = this.vdom.read(elm)
         this.currentVTree = Util.deepCopy(this.originVTree)
@@ -69,7 +96,7 @@ export default class Vior {
         return this
     }
     update() {
-        if (! this.mounted)
+        if (! this.mounted || this.isComponent)
             return
         
         let vdom = this.vdom,
@@ -78,6 +105,18 @@ export default class Vior {
             newVTree = renderer.render(this.originVTree)
         vdom.patch(oldVTree, newVTree)
         this.currentVTree = newVTree
+    }
+    renderAsComponent(vnode) {
+        if (! this.isComponent)
+            return
+        
+        for (let k in vnode.attrs) {
+            let v = vnode.attrs[k]
+            if (this.opts.attrs && this.opts.attrs.indexOf(k) >= 0)
+                this.vars.__setRaw(k, v)
+        }
+        
+        return this.renderer.render(this.originVTree, vnode.ctx, true, [], vnode.slots).children
     }
     unmount() {
         this.mounted = null

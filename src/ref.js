@@ -56,7 +56,7 @@ export default class Ref {
             set(target, key, value) {
                 let changed = value != target.__rawValue[key]
                 target.__rawValue[key] = value
-                target.__realValue[key] = Ref.createRef(_this, value)
+                target.__realValue[key] = Ref.createRef(_this, value, deps, depTag)
                 if (changed)
                     target.__deps.notify(target.__depTag || key)
                 return true

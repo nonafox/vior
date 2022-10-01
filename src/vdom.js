@@ -1,6 +1,13 @@
 import Util from './util.js'
 
 export default class VDom {
+    getElementType(dom) {
+        if (dom.tagName && dom.tagName.toLowerCase() == 'void')
+            return 'void'
+        if (dom.tagName)
+            return 'common'
+        return dom.nodeName.substr(1)
+    }
     read(dom, firstRead = true, falseDom = false) {
         let tree = []
         let children = ! firstRead ? Object.assign({}, dom.childNodes) : [dom]
@@ -16,12 +23,12 @@ export default class VDom {
             tree.push({
                 dom: ! falseDom ? v : null,
                 tag: v.tagName ? v.tagName.toLowerCase() : null,
-                type: firstRead ? 'root' : (v.tagName ? 'common' : v.nodeName.substr(1)),
+                type: firstRead ? 'root' : this.getElementType(v),
                 attrs: attrs,
                 ctx: {},
                 data: {},
                 text: ! v.tagName ? v.data : null,
-                children: this.read(v, false, falseDom) || null
+                children: this.read(v, false, falseDom)
             })
         }
         
@@ -48,7 +55,8 @@ export default class VDom {
         return true
     }
     moveNode(pdom, ldl, otree, onode, ntree, nnode) {
-        let nid = ntree.indexOf(nnode),
+        let oid = otree.indexOf(onode),
+            nid = ntree.indexOf(nnode),
             sdom = ntree[nid - 1],
             edom = ntree[nid + 1]
         sdom = sdom ? sdom.dom : null
@@ -56,13 +64,19 @@ export default class VDom {
         sdom = ldl.indexOf(sdom) >= 0 && sdom
         edom = ldl.indexOf(edom) >= 0 && edom
         
-        if (! sdom && ! edom && ldl.indexOf(nnode.dom) != 0) {
+        if (! sdom && ! edom) {
+            if (ldl.indexOf(nnode.dom) === 0)
+                return
             pdom.insertBefore(nnode.dom, null)
             
             if (ldl.indexOf(nnode.dom) >= 0)
                 ldl.splice(ldl.indexOf(nnode.dom), 1)
             ldl.push(nnode.dom)
-        } else if (sdom && ldl[ldl.indexOf(sdom) + 1] !== nnode.dom) {
+            return
+        }
+        if (sdom) {
+            if (ldl[ldl.indexOf(sdom) + 1] === nnode.dom)
+                return
             pdom.insertBefore(nnode.dom, ldl[ldl.indexOf(sdom) + 1])
             
             if (ldl.indexOf(nnode.dom) >= 0)
@@ -71,12 +85,17 @@ export default class VDom {
                 ldl.splice(ldl.indexOf(sdom) + 1, 0, nnode.dom)
             else
                 ldl.push(nnode.dom)
-        } else if (edom && ldl[ldl.indexOf(edom) - 1] !== nnode.dom) {
+            return
+        }
+        if (edom) {
+            if (ldl[ldl.indexOf(edom) - 1] === nnode.dom)
+                return
             pdom.insertBefore(nnode.dom, edom)
             
             if (ldl.indexOf(nnode.dom) >= 0)
                 ldl.splice(ldl.indexOf(nnode.dom), 1)
             ldl.splice(ldl.indexOf(edom), 0, nnode.dom)
+            return
         }
     }
     patchSameNode(pdom, ldl, otree, onode, ntree, nnode) {
@@ -110,11 +129,12 @@ export default class VDom {
         if (! nnode.tag && onode.text != nnode.text)
             onode.dom.data = nnode.text
         nnode.dom = onode.dom
+        
         if (! nnode.dom)
             return
         
         this.moveNode(pdom, ldl, otree, onode, ntree, nnode)
-        this.patch(onode, nnode)
+        this.patch(onode, nnode, false)
     }
     newNode(pdom, ldl, otree, ntree, nnode) {
         let dom = nnode.tag ? document.createElement(nnode.tag) : (
@@ -155,7 +175,7 @@ export default class VDom {
         
         return true
     }
-    patch(onode, nnode) {
+    patch(onode, nnode, firstPatch = true) {
         let otree = onode.children,
             ntree = nnode.children,
             pdom = onode.dom,
@@ -164,7 +184,6 @@ export default class VDom {
             let v = otree[k]
             ldl.push(v.dom)
         }
-        
         let s1i = 0, s2i = 0, e1i = otree.length - 1, e2i = ntree.length - 1
         while (s2i <= e2i) {
             let s1e = otree[s1i], s2e = ntree[s2i],

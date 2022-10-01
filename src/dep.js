@@ -1,13 +1,15 @@
 import Util from './util.js'
 
+let currentContext, currentContextFavourTag
+
 export default class Dep {
     static createDepContext(_this, func, favourTag = null) {
         let doit = () => {
-            Dep.currentContext = doit
-            Dep.currentContextFavourTag = favourTag
+            currentContext = doit
+            currentContextFavourTag = favourTag
             func.call(_this)
-            Dep.currentContext = null
-            Dep.currentContextFavourTag = null
+            currentContext = null
+            currentContextFavourTag = null
         }
         doit()
     }
@@ -15,18 +17,17 @@ export default class Dep {
     constructor(_this) {
         this.visInstance = _this
         this.deps = new Map()
-        this.depKeys = []
     }
     add(tag) {
-        if (! Dep.currentContext)
+        if (! currentContext)
             return
         
-        let oriVal = this.deps.get(Dep.currentContext),
+        let oriVal = this.deps.get(currentContext),
             newVal = { tags: oriVal ? (oriVal.tags || {}) : {}, key: null, favour: null }
         newVal.tags[tag] = true
-        newVal.favourTag = Dep.currentContextFavourTag
+        newVal.favourTag = currentContextFavourTag
         
-        this.deps.set(Dep.currentContext, newVal)
+        this.deps.set(currentContext, newVal)
     }
     notify(tag) {
         let visInstance = this.visInstance
