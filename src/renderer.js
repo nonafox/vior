@@ -159,18 +159,15 @@ export default class Renderer {
                     newKey = data.key.substr(1), newVal
                 switch (prefix) {
                     case ':':
+                        if (data.key.substr(0, 2) == '::') {
+                            newKey = data.key.substr(2)
+                            vnode.data[newKey] = this.runInContext(vnode, key, val)
+                            newKey = newVal = null
+                            break
+                        }
                         newVal = this.runInContext(vnode, key, val)
                         break
                     case '@':
-                        let reg = /::(.*?)$/, propName = reg.exec(newKey)
-                        if (propName) {
-                            propName = propName[1]
-                            newKey = newKey.replace(reg, '')
-                            
-                            vnode.data[propName] = this.viorInstance.vars[val]
-                            val = `${val} = this.${propName}`
-                        }
-                        
                         newKey = '__unhandled_functions__on' + newKey
                         let funcs = vnode.data[newKey] || []
                         funcs.push(this.runInContext(vnode, key, val, true))

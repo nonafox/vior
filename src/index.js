@@ -21,6 +21,7 @@ export default class Vior {
         this.vars = Ref.createRef(this, opts.vars ? opts.vars() : {})
         this.handleDynamicRefs()
         this.handleWatchers()
+        
         this.handleComponents()
         
         this.triggerHook('created')
@@ -84,7 +85,6 @@ export default class Vior {
         this.mounted = elm
         this.originVTree = this.vdom.read(elm)
         this.currentVTree = Util.deepCopy(this.originVTree)
-        
         Dep.createDepContext(this, function () {
             this.update()
         })

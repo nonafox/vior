@@ -18,7 +18,7 @@
             <div $if="total" $html="total"></div>
             <div $else>Nothing to do!</div>
             <br/>
-            <input @input::value="inputVal" @input="console.log('input: ', $args[0].data)" placeholder="event name"/>
+            <input @input="inputVal = this.value" ::value="inputVal" @input="console.log('input: ', $args[0].data)" placeholder="event name"/>
             <button @click="add()" :disabled="! inputVal">add</button>
             <hr/>
             <h3>Powered by Vior</h3>
