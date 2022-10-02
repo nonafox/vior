@@ -6,7 +6,7 @@ import Ref from './ref.js'
 
 export default class Vior {
     constructor(opts) {
-        this.uniqueId = 'VisInstance_' + Math.floor(Math.random() * 1e8)
+        this.uniqueId = 'ViorInstance_' + Math.floor(Math.random() * 1e8)
         this.vdom = new VDom()
         this.renderer = new Renderer(this)
         
