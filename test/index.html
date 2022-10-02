@@ -9,10 +9,11 @@
             <h1>TODO list</h1>
             <hr/>
             <ul>
-                <li $for="(k, v) in list">
-                    {{ k + 1 }}: {{ v }}
-                    <button @click="del(k)">delete</button>
-                </li>
+                <todo-item $for="(k, v) in list" :key="k" :value="v" @delete="del($args[0])">
+                    <slot-provider name="desc">
+                        {{ v.indexOf('start') == 0 ? 'Start it fast!' : 'Move it!' }}
+                    </slot-provider>
+                </todo-item>
             </ul>
             <div $if="total" $html="total"></div>
             <div $else>Nothing to do!</div>
@@ -24,6 +25,18 @@
         </div>
         <script type="module">
             import Vior from '../src/index.js'
+            
+            let todoItemComponent = {
+                html: `
+                    <li>
+                        <span>{{ key + 1 }}: {{ value }}</span>
+                        <strong><slot-receiver name="desc"></slot-receiver></strong>
+                        <button @click="$triggerEvent('ondelete', key)">delete</button>
+                    </li>
+                `,
+                attrs: ['key', 'value'],
+                events: ['ondelete']
+            }
             
             let vars, funcs
             let viorIns = new Vior({
@@ -59,6 +72,9 @@
                     total() {
                         console.log('watcher: total changed')
                     }
+                },
+                comps: {
+                    'TodoItem': todoItemComponent
                 }
             }).mount(document.getElementById('app'))
         </script>

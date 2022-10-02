@@ -46,28 +46,26 @@ export default class Renderer {
         let setup = `
             (function ($this) {
                 let ____ctx = ${ctxSetup}
-                try {
-                    let __syncVars = () => {
-                            try { ${varsSyncSetup} } catch (ex) {
-                                ____ctx.__triggerError('Runtime error', \`${key}\`, '(inner error) sync vars error', ex)
-                            }
-                        },
-                        $triggerEvent = (evtName, ...__args) => {
-                            try { $this.componentEvents[evtName](...__args) } catch (ex) {
-                                ____ctx.__triggerError('Runtime error', \`${key}\`, '(inner error) $triggerEvent error', ex)
-                            }
+                let __syncVars = () => {
+                        try { ${varsSyncSetup} } catch (ex) {
+                            ____ctx.__triggerError('Runtime error', \`${key}\`, null, '(inner error) sync vars error')
                         }
-                    let $parent = $this.parentIns,
-                        $children = $this.childIns
-                    let { ${refKeys} } = $this.vars,
-                        { ${refKeys_origin} } = $this.vars,
-                        { ${ctxKeys} } = ____ctx;
-                    ${funcsSetup}
-                    ${code};
-                    __syncVars()
-                } catch (ex) {
+                    },
+                    $triggerEvent = (evtName, ...__args) => {
+                        try { $this.componentEvents[evtName](...__args) } catch (ex) {
+                            ____ctx.__triggerError('Runtime error', \`${key}\`, null, '(inner error) trigger event error:\\nPlease make sure your event which to be triggered is registered.')
+                        }
+                    }
+                let $parent = $this.parentIns,
+                    $children = $this.childIns
+                let { ${refKeys} } = $this.vars,
+                    { ${refKeys_origin} } = $this.vars,
+                    { ${ctxKeys} } = ____ctx
+                ${funcsSetup}
+                try { ${code} } catch (ex) {
                     ____ctx.__triggerError('Runtime error', \`${key}\`, null, ex)
                 }
+                __syncVars()
             }).call(${thises})
         `
         
@@ -249,7 +247,7 @@ export default class Renderer {
                 let k2 = handledEvtFuncs[kk2],
                     v2 = v.data[k2]
                 delete v.data[k2]
-                if (compIns.opts.events && compIns.opts.events.indexOf(k2) < 0)
+                if ((compIns.opts.events || []).indexOf(k2) < 0)
                     continue
                 
                 let tmp = this.runInEvalContext(`function (...$args) { (${v2}).call(null, ...$args) }`, v.ctx)
@@ -283,7 +281,8 @@ export default class Renderer {
         } else if (v.tag == 'slot-receiver' && slots) {
             v.type = 'void'
             v.children = slots[v.attrs.name || 'default'] || []
-            
+            return null
+        } else {
             return null
         }
         
@@ -319,7 +318,7 @@ export default class Renderer {
                     deleted = true
                     break
                 }
-                if (newKey && newVal)
+                if (newKey)
                     v.attrs[newKey] = newVal
                 if (newKey != k2)
                     delete v.attrs[k2]
@@ -335,7 +334,7 @@ export default class Renderer {
             }
             
             if (v.type == 'text' && v.text)
-                v.text = this.__render(onode, ov, 'text', v.text)
+                v.text = this.__render(onode, v, ov, 'text', v.text)
             if (v.children) {
                 let children = this.render(v, v.ctx, false, cachedCompIns, slots).children
                 if (v.type != 'void') {

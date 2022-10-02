@@ -4,37 +4,29 @@ export default {
     
     triggerError(desc, name, code, ex) {
         console.group('[Vior error]:')
-        console.group('Type: ')
+        console.group('Type:')
         console.log(desc || '[unknown]')
         console.groupEnd()
-        console.group('Position: ')
+        console.group('Position:')
         console.log(name || '[unknown]')
         console.groupEnd()
-        console.group('Code / Describe: ')
+        console.group('Code:')
         console.log(code || '[unknown]')
         console.groupEnd()
-        console.group('Error: ')
+        console.group('Error:')
         console.log(ex || '[unknown]')
         console.groupEnd()
         console.groupEnd()
         throw new Error('[Vior error]')
     },
     isPlainObject(obj) {
-        // From: https://segmentfault.com/a/1190000013338935
-        
         if (! obj)
             return
         if (Array.isArray(obj))
             return true
         if (obj.toString() == '[object Object]') {
-            let hasOwn = Object.prototype.hasOwnProperty
-            
-            let proto = Object.getPrototypeOf(obj)
-            if (! proto)
-                return false
-            let ctor = hasOwn.call(proto, 'constructor') && proto.constructor,
-                cond = hasOwn.toString.call(ctor) == hasOwn.toString.call(Object)
-            return typeof ctor == 'function' && cond
+            return Object.getPrototypeOf(obj).constructor.toString()
+                === Object.getPrototypeOf({}).constructor.toString()
         } else {
             return false
         }
