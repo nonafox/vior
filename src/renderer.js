@@ -16,7 +16,9 @@ export default class Renderer {
             pvlist.push(vnode)
     }
     runInEvalContext(__code, __ctx) {
-        return eval(__code)
+        let __tmp
+        eval(`__tmp = (${__code})`)
+        return __tmp
     }
     runInContext(vnode, key, code, isEvt = false) {
         let refKeysArr = Object.keys(this.viorInstance.vars.__getRaw()),
@@ -31,12 +33,12 @@ export default class Renderer {
         let funcsSetup = ''
         for (let kk in funcKeysArr) {
             let k = funcKeysArr[kk]
-            funcsSetup += `let ${k} = function (...args) { __syncRefs(); $this.funcs.${k}.call($this, ...args) }; `
+            funcsSetup += `let ${k} = function (...args) { __syncVars(); $this.funcs.${k}.call($this, ...args) }; `
         }
-        let refsSyncSetup = '', refKeys_origin = []
+        let varsSyncSetup = '', refKeys_origin = []
         for (let kk in refKeysArr) {
             let k = refKeysArr[kk]
-            refsSyncSetup += `if (__origin_value__${k} !== ${k}) { $this.vars.${k} = ${k} }; `
+            varsSyncSetup += `if (__origin_value__${k} !== ${k}) { $this.vars.${k} = ${k} }; `
             refKeys_origin.push(`${k}: __origin_value__${k}`)
         }
         refKeys_origin = refKeys_origin.join(', ')
@@ -45,18 +47,24 @@ export default class Renderer {
             (function ($this) {
                 let ____ctx = ${ctxSetup}
                 try {
-                    let __syncRefs = () => {
-                            ${refsSyncSetup}
+                    let __syncVars = () => {
+                            try { ${varsSyncSetup} } catch (ex) {
+                                ____ctx.__triggerError('Runtime error', \`${key}\`, '(inner error) sync vars error', ex)
+                            }
                         },
-                        $emit = (__evtName, ...__args) => {
-                            ____ctx['__component_' + $this.uniqueId + '__event__' + __evtName](...__args)
+                        $triggerEvent = (evtName, ...__args) => {
+                            try { $this.componentEvents[evtName](...__args) } catch (ex) {
+                                ____ctx.__triggerError('Runtime error', \`${key}\`, '(inner error) $triggerEvent error', ex)
+                            }
                         }
+                    let $parent = $this.parentIns,
+                        $children = $this.childIns
                     let { ${refKeys} } = $this.vars,
                         { ${refKeys_origin} } = $this.vars,
                         { ${ctxKeys} } = ____ctx;
                     ${funcsSetup}
                     ${code};
-                    __syncRefs()
+                    __syncVars()
                 } catch (ex) {
                     ____ctx.__triggerError('Runtime error', \`${key}\`, null, ex)
                 }
@@ -202,7 +210,7 @@ export default class Renderer {
             k = k[1]
             
             let _tmp = v.join('; '), tmp
-            eval(`tmp = function (...$args) { ${_tmp} }`)
+            tmp = this.runInEvalContext(`function (...$args) { ${_tmp} }`)
             
             delete vnode.data[_k]
             vnode.data[k] = tmp
@@ -210,6 +218,76 @@ export default class Renderer {
             res.push(k)
         }
         return res
+    }
+    handleComponent(tree, k, v, slots, cachedCompIns, handledEvtFuncs) {
+        if (this.viorInstance.componentTags && this.viorInstance.componentTags.indexOf(v.tag) >= 0) {
+            let _this = this.viorInstance,
+                compTag = v.tag,
+                compIndex = _this.componentTags.indexOf(compTag),
+                compName = _this.componentNames[compIndex],
+                compOpts = _this.opts.comps[compName],
+                compIns = null
+            if (cachedCompIns[compName] && cachedCompIns[compName][0]) {
+                compIns = cachedCompIns[compName][0]
+                cachedCompIns[compName].splice(0, 1)
+            } else {
+                let viorConstructor = Object.getPrototypeOf(_this).constructor
+                compIns = new viorConstructor(compOpts)
+                if (! _this.cachedComponentIns[compName])
+                    _this.cachedComponentIns[compName] = []
+                _this.cachedComponentIns[compName].push(compIns)
+            }
+            
+            compIns.parentIns = this.viorInstance
+            compIns.parentCtx = v.ctx
+            if (! this.viorInstance.childIns)
+                this.viorInstance.childIns = []
+            if (this.viorInstance.childIns.indexOf(compIns) < 0)
+                this.viorInstance.childIns.push(compIns)
+            compIns.componentEvents = {}
+            for (let kk2 in handledEvtFuncs) {
+                let k2 = handledEvtFuncs[kk2],
+                    v2 = v.data[k2]
+                delete v.data[k2]
+                if (compIns.opts.events && compIns.opts.events.indexOf(k2) < 0)
+                    continue
+                
+                let tmp = this.runInEvalContext(`function (...$args) { (${v2}).call(null, ...$args) }`, v.ctx)
+                compIns.componentEvents[k2] = tmp
+            }
+            
+            v.children = this.render(v, v.ctx, false, cachedCompIns, slots).children
+            let __slots = {}
+            for (let k2 in v.children) {
+                let v2 = v.children[k2]
+                if (v2.tag == 'slot-provider') {
+                    let name = v2.attrs.name || 'default'
+                    if (! __slots[name])
+                        __slots[name] = []
+                    for (let k3 in v2.children)
+                        __slots[name].push(v2.children[k3])
+                } else {
+                    if (! __slots.default)
+                        __slots.default = []
+                    __slots.default.push(v2)
+                }
+            }
+            v.children = null
+            v.slots = __slots
+            let res = compIns.renderAsComponent(v)
+            res.reverse()
+            tree.splice(k, 1)
+            for (let k2 in res)
+                tree.splice(k, 0, res[k2])
+            k += res.length - 1
+        } else if (v.tag == 'slot-receiver' && slots) {
+            v.type = 'void'
+            v.children = slots[v.attrs.name || 'default'] || []
+            
+            return null
+        }
+        
+        return { k: k }
     }
     render(_onode, ctx = {}, rootRender = true, cachedCompIns = [], slots = []) {
         let onode = rootRender ? Util.deepCopy(_onode) : _onode
@@ -228,7 +306,7 @@ export default class Renderer {
                 ov = Util.deepCopy(v)
             if (! v) continue
             
-            v.ctx = Util.deepCopy(v.ctx || {}, onode.ctx)
+            v.ctx = Util.deepCopy(onode.ctx, v.ctx || {})
             
             let deleted = false
             for (let _k2 in v.attrs) {
@@ -250,71 +328,14 @@ export default class Renderer {
                 continue
             let handledEvtFuncs = this.handleEvtFunctions(v)
             
-            if (this.viorInstance.componentTags && this.viorInstance.componentTags.indexOf(v.tag) >= 0) {
-                let _this = this.viorInstance,
-                    compTag = v.tag,
-                    compIndex = _this.componentTags.indexOf(compTag),
-                    compName = _this.componentNames[compIndex],
-                    compOpts = _this.opts.comps[compName],
-                    compIns = null
-                if (cachedCompIns[compName] && cachedCompIns[compName][0]) {
-                    compIns = cachedCompIns[compName][0]
-                    cachedCompIns[compName].splice(0, 1)
-                } else {
-                    let viorConstructor = Object.getPrototypeOf(_this).constructor
-                    compIns = new viorConstructor(compOpts)
-                    if (! _this.cachedComponentIns[compName])
-                        _this.cachedComponentIns[compName] = []
-                    _this.cachedComponentIns[compName].push(compIns)
-                }
-                
-                let octx = v.ctx
-                v.ctx = Util.deepCopy(defaultCtx)
-                v.ctx.__viorInstance = compIns
-                let ctxKey = '__component_' + compIns.uniqueId + '__parentCtx'
-                v.ctx[ctxKey] = octx
-                for (let kk2 in handledEvtFuncs) {
-                    let k2 = handledEvtFuncs[kk2],
-                        v2 = v.data[k2]
-                    let evtKey = '__component_' + compIns.uniqueId + '__event__' + k2
-                    let tmp
-                    eval(`tmp = function (...$args) { let __ctx = this.${ctxKey}; (${v2}).call(null, ...$args) }`)
-                    v.ctx[evtKey] = tmp
-                }
-                
-                v.children = this.render(v, v.ctx, false, cachedCompIns, null).children
-                let __slots = {}
-                for (let k2 in v.children) {
-                    let v2 = v.children[k2]
-                    if (v2.tag == 'slot') {
-                        let name = v2.attrs.name || 'default'
-                        if (! __slots[name])
-                            __slots[name] = []
-                        for (let k3 in v2.children)
-                            __slots[name].push(v2.children[k3])
-                    } else {
-                        if (! __slots.default)
-                            __slots.default = []
-                        __slots.default.push(v2)
-                    }
-                }
-                v.children = null
-                v.slots = __slots
-                let res = compIns.renderAsComponent(v)
-                res.reverse()
-                tree.splice(k, 1)
-                for (let k2 in res)
-                    tree.splice(k, 0, res[k2])
-                k += res.length - 1
-                
+            let handleComponentRes = this.handleComponent(tree, k, v, slots, cachedCompIns, handledEvtFuncs)
+            if (handleComponentRes) {
+                ({ k } = handleComponentRes)
                 continue
-            } else if (v.tag == 'slot' && slots) {
-                v.type = 'void'
-                v.children = slots[v.attrs.name] || []
             }
             
             if (v.type == 'text' && v.text)
-                v.text = this.__render(onode, v, ov, 'text', v.text)
+                v.text = this.__render(onode, ov, 'text', v.text)
             if (v.children) {
                 let children = this.render(v, v.ctx, false, cachedCompIns, slots).children
                 if (v.type != 'void') {

@@ -64,9 +64,6 @@ export default class Vior {
         }
     }
     handleComponents() {
-        if (this.isComponent)
-            return
-        
         this.cachedComponentIns = {}
         this.componentNames = Object.keys(this.opts.comps || {})
         this.componentTags = []
@@ -116,7 +113,7 @@ export default class Vior {
                 this.vars.__setRaw(k, v)
         }
         
-        return this.renderer.render(this.originVTree, vnode.ctx, true, [], vnode.slots).children
+        return this.renderer.render(this.originVTree, {}, true, [], vnode.slots).children
     }
     unmount() {
         this.mounted = null

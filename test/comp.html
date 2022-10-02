@@ -6,25 +6,41 @@
     </head>
     <body>
         <div id="app">
-            <test @test="alert($args)" :data="testData">
-                <slot name="testSlot">1</slot>
-                <slot name="testSlot2">666</slot>
+            <test @test="console.log(666)" :data="testData">
+                <slot-provider name="testSlot">1</slot-provider>
+                <slot-provider name="testSlot2">666</slot-provider>
             </test>
             <test :data="testData">
-                <slot name="testSlot">2</slot>
+                <slot-provider name="testSlot">2</slot-provider>
             </test>
             <h3>Powered by Vior</h3>
         </div>
         <script type="module">
             import Vior from '../src/index.js'
             
+            let ITestComponent = {
+                html: `
+                    <i :mark="uniqueId"><slot-receiver></slot-receiver></i>
+                `,
+                vars() {
+                    return {
+                        uniqueId: Math.random()
+                    }
+                }
+            }
             let TestComponent = {
                 html: `
                     <h1>{{ data.rand }}</h1>
-                    <slot name="testSlot"></slot>
-                    <i @click="$emit('ontest', new Date())"><slot name="testSlot2"></slot></i>
+                    <slot-receiver name="testSlot"></slot-receiver>
+                    <i-test @click="$triggerEvent('ontest', new Date())">
+                        <slot-receiver name="testSlot2"></slot-receiver>
+                    </i-test>
                 `,
-                attrs: ['data']
+                attrs: ['data'],
+                event: ['ontest'],
+                comps: {
+                    'ITest': ITestComponent
+                }
             }
             
             let vars, funcs

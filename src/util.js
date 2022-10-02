@@ -4,13 +4,13 @@ export default {
     
     triggerError(desc, name, code, ex) {
         console.group('[Vior error]:')
-        console.group('Describe: ')
+        console.group('Type: ')
         console.log(desc || '[unknown]')
         console.groupEnd()
         console.group('Position: ')
         console.log(name || '[unknown]')
         console.groupEnd()
-        console.group('Code: ')
+        console.group('Code / Describe: ')
         console.log(code || '[unknown]')
         console.groupEnd()
         console.group('Error: ')
@@ -92,6 +92,14 @@ export default {
         } else {
             return false
         }
+    },
+    deepIndexof(arr, item) {
+        for (let k in arr) {
+            let v = arr[k]
+            if (this.deepCompare(v, item))
+                return k
+        }
+        return undefined
     },
     realLength(arr) {
         if (Array.isArray(arr))
