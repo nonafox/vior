@@ -215,31 +215,6 @@ export default class VDom {
         }
     }
     patchFromText(tree) {
-        if (! Array.isArray(tree))
-            return this.patchFromText(tree.children)
-        
-        let res = ''
-        for (let k in tree) {
-            let v = tree[k],
-                singleTag = Util.selfClosingTags.indexOf(v.tag) >= 0
-            
-            if (v.tag) {
-                let children = v.children.length ? this.patchFromText(v.children) : '',
-                    attrs = ''
-                for (let k2 in v.attrs) {
-                    let v2 = v.attrs[k2] + ''
-                    v2 = v2.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
-                    attrs += ` ${k2}="${v2}"`
-                }
-                res += `<${v.tag}${attrs}${singleTag ? '/' : ''}>${children}${singleTag ? '' : `</${v.tag}>`}`
-            } else if (v.type == 'text') {
-                res += v.text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/(\s|&nbsp;)+/g, ' ')
-                             .replace(/'/g, '&#39;').replace(/"/g, '&quot;')
-            } else if (v.type == 'comment') {
-                res += `<!--${v.text}-->`
-            }
-        }
-        
-        return res
+        return this.tdom.patch(tree)
     }
 }
