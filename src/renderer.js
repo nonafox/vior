@@ -133,13 +133,13 @@ export default class Renderer {
                 let res = this.runInContext(vnode, key, val)
                 if (! res)
                     vnode.deleted = true
-                pvnode.ctx.__if__value = res
+                pvnode.ctx.__if_value = res ? true : false
             } else if (key == 'else') {
-                let res = pvnode.ctx.__if__value
+                let res = pvnode.ctx.__if_value
                 if (res)
                     vnode.deleted = true
             } else if (key == 'elseif') {
-                let res = pvnode.ctx.__if__value
+                let res = pvnode.ctx.__if_value
                     res2 = this.runInContext(vnode, key, val)
                 if (! (! res && res2))
                     vnode.deleted = true

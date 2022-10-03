@@ -1,6 +1,10 @@
 import Util from './util.js'
+import TDom from './tdom.js'
 
 export default class VDom {
+    constructor() {
+        this.tdom = new TDom()
+    }
     getElementType(dom) {
         if (dom.tagName && dom.tagName.toLowerCase() == 'void')
             return 'void'
@@ -8,41 +12,19 @@ export default class VDom {
             return 'common'
         return dom.nodeName.substr(1)
     }
-    read(dom, firstRead = true, falseDom = false) {
-        let tree = []
-        let children = ! firstRead ? Object.assign({}, dom.childNodes) : [dom]
-        for (let k in children) {
-            let v = children[k]
-            
-            let attrNames = v.getAttributeNames ? v.getAttributeNames() : [], attrs = []
-            for (let _k2 in attrNames) {
-                let k2 = attrNames[_k2], v2 = v.getAttribute(k2)
-                attrs[k2] = v2
-            }
-            
-            tree.push({
-                dom: ! falseDom ? v : null,
-                tag: v.tagName ? v.tagName.toLowerCase() : null,
-                type: firstRead ? 'root' : this.getElementType(v),
-                attrs: attrs,
-                ctx: {},
-                data: {},
-                text: ! v.tagName ? v.data : null,
-                children: this.read(v, false, falseDom)
-            })
-        }
-        
-        return ! firstRead ? tree : tree[0]
-    }
     readFromText(text) {
-        let parser = new DOMParser()
-        let _root = parser.parseFromString(text, 'text/html'),
-            root = _root.childNodes[0].childNodes[1]
-        let res = this.read(root, true, true)
+        return this.tdom.read(text)
+    }
+    read(dom) {
+        let res = this.readFromText(dom.innerHTML)
+        res.dom = dom
+        dom.innerHTML = ''
         return res
     }
     isSameNode(vnode1, vnode2) {
         if (! vnode1 || ! vnode2)
+            return false
+        if (! vnode1.dom && ! vnode2.dom)
             return false
         
         if (vnode1.tag != vnode2.tag || vnode1.type != vnode2.type)
@@ -228,7 +210,7 @@ export default class VDom {
         
         for (let k in otree) {
             let v = otree[k]
-            if (! v.patched)
+            if (! v.patched && v.dom)
                 this.removeNode(pdom, ldl, v)
         }
     }
@@ -239,7 +221,7 @@ export default class VDom {
         let res = ''
         for (let k in tree) {
             let v = tree[k],
-                singleTag = Util.singleTags.indexOf(v.tag) >= 0
+                singleTag = Util.selfClosingTags.indexOf(v.tag) >= 0
             
             if (v.tag) {
                 let children = v.children.length ? this.patchFromText(v.children) : '',

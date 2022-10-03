@@ -1,6 +1,6 @@
 export default {
-    singleTags: ['br', 'hr', 'area', 'base', 'img', 'input', 'link', 'meta', 'basefont',
-                 'param', 'col', 'frame', 'embed', 'keygen', 'source'],
+    selfClosingTags: ['br', 'hr', 'area', 'base', 'img', 'input', 'link', 'meta', 'basefont',
+                      'param', 'col', 'frame', 'embed', 'keygen', 'source'],
     
     triggerError(desc, name, code, ex) {
         console.group('[Vior error]:')
