@@ -84,7 +84,7 @@ export default class VDom {
         for (let k in nnode.attrs) {
             let v1 = onode.attrs[k],
                 v2 = nnode.attrs[k]
-            if (v1 != v2)
+            if (v1 != v2 && ! (v2 === null || v2 === false || typeof v2 == 'undefined'))
                 onode.dom.setAttribute(k, v2)
         }
         for (let k in onode.attrs) {
@@ -124,7 +124,8 @@ export default class VDom {
         )
         for (let k in nnode.attrs) {
             let v = nnode.attrs[k]
-            dom.setAttribute(k, v)
+            if (! (v === null || v === false || typeof v == 'undefined'))
+                dom.setAttribute(k, v)
         }
         for (let k in nnode.data) {
             let v = nnode.data[k]

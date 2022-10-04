@@ -56,8 +56,8 @@ export default class Renderer {
                             ____ctx.__triggerError('Runtime error', \`${key}\`, null, '(inner error) trigger event error:\\nPlease make sure your event which to be triggered is registered.')
                         }
                     }
-                let $parent = $this.parentIns,
-                    $children = $this.childIns
+                let $parent = $this.$parent,
+                    $children = $this.$children
                 let { ${refKeys} } = $this.vars,
                     { ${refKeys_origin} } = $this.vars,
                     { ${ctxKeys} } = ____ctx
@@ -233,12 +233,11 @@ export default class Renderer {
                 _this.cachedComponentIns[compName].push(compIns)
             }
             
-            compIns.parentIns = this.viorInstance
-            compIns.parentCtx = v.ctx
-            if (! this.viorInstance.childIns)
-                this.viorInstance.childIns = []
-            if (this.viorInstance.childIns.indexOf(compIns) < 0)
-                this.viorInstance.childIns.push(compIns)
+            compIns.$parent = this.viorInstance
+            if (! this.viorInstance.$children)
+                this.viorInstance.$children = []
+            if (this.viorInstance.$children.indexOf(compIns) < 0)
+                this.viorInstance.$children.push(compIns)
             compIns.componentEvents = {}
             for (let kk2 in handledEvtFuncs) {
                 let k2 = handledEvtFuncs[kk2],
@@ -287,7 +286,7 @@ export default class Renderer {
     }
     render(_onode, ctx = {}, rootRender = true, cachedCompIns = [], slots = []) {
         let onode = rootRender ? Util.deepCopy(_onode) : _onode
-        let tree = onode.children
+        let tree = onode.children || []
         let defaultCtx = {
             __viorInstance: this.viorInstance,
             __triggerError: Util.triggerError
@@ -296,6 +295,9 @@ export default class Renderer {
         
         if (rootRender)
             cachedCompIns = Util.deepCopy(this.viorInstance.cachedComponentIns)
+        
+        let consoled = ! window.__consoled
+        window.__consoled = true
         
         for (let k = 0; k < tree.length; k ++) {
             let v = tree[k],

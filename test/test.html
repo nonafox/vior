@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Static Template</title>
+  </head>
+  <body>
+    <div id="app">
+      <!-- 再重写一下第一个计数器例子 -->
+      <button @click="increase()" :disabled="count >= 10">increase</button>
+      <br />
+      Count: {{ count }}
+    </div>
+    <script type="module">
+      import Vior from "../src/index.js";
+
+      let viorIns = new Vior({
+        vars() {
+          return {
+            count: 0
+          };
+        },
+        funcs: {
+          increase() {
+            this.funcs.anotherFunction();
+          },
+          anotherFunction() {
+            this.vars.count++;
+          }
+        },
+        // 唯一的改动是在这加了一个watcher，即监听器
+        // 通过watchers选项添加监听器。在watchers选项里添加与定义的响应性变量同名的函数，即可监听该变量
+        watchers: {
+          count() {
+            console.log("count 变量被更改！");
+          }
+        }
+      }).mount(document.getElementById("app"));
+    </script>
+  </body>
+</html>

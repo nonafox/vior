@@ -128,7 +128,7 @@ export default class Vior {
         try {
             this.componentEvents[evtName](...args)
         } catch (ex) {
-            Util.triggerError('Runtime error', null, null, '(inner error) trigger event error:\\nPlease make sure your event which to be triggered is registered.')
+            Util.triggerError('Runtime error', null, null, '(inner error) trigger event error:\nPlease make sure your event which to be triggered is registered.')
         }
     }
 }
