@@ -246,9 +246,9 @@ import Vior from 'https://unpkg.com/vior'
 
 let CustomLiComponent = {
     html: `
-        <li @click="$triggerEvent('onclicknotice', '哎哟你点我干嘛~~哎哟~')">
+        <li>
             <span $if="key % 2 === 0">Id: {{ value }}</span>
-            <span $else>
+            <span $else @click="$triggerEvent('onclicknotice', '哎哟你点我干嘛~~哎哟~')">
                 <!-- 通过 <slot-receiver name="slotName"></...> 接收并放置父组件传下来的插槽 -->
                 <slot-receiver name="invisibleNotice"></slot-receiver>
             </span>

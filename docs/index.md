@@ -245,9 +245,9 @@ import Vior from 'https://unpkg.com/vior'
 
 let CustomLiComponent = {
     html: `
-        <li @click="$triggerEvent('onclicknotice', 'Why did you click me~')">
+        <li>
             <span $if="key % 2 === 0">Id: {{ value }}</span>
-            <span $else>
+            <span $else @click="$triggerEvent('onclicknotice', 'Why did you click me~')">
                 <!-- receive and place the slots from father using <slot-receiver name="slotName"></...> -->
                 <slot-receiver name="invisibleNotice"></slot-receiver>
             </span>
