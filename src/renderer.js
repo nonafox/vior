@@ -52,8 +52,10 @@ export default class Renderer {
                         }
                     },
                     $triggerEvent = (evtName, ...__args) => {
+                        if (! $this.componentEvents || ! $this.componentEvents[evtName])
+                            ____ctx.__triggerError('Runtime error', '(component event) ' + evtName, null, '(inner error) please make sure that you have registered the specific component event before you trigger it!')
                         try { $this.componentEvents[evtName](...__args) } catch (ex) {
-                            ____ctx.__triggerError('Runtime error', \`${key}\`, null, '(inner error) trigger event error:\\nPlease make sure your event which to be triggered is registered.')
+                            ____ctx.__triggerError('Runtime error', '(component event) ' + evtName, null, ex)
                         }
                     }
                 let $parent = $this.$parent,

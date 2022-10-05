@@ -13,7 +13,10 @@ export default class VDom {
         return dom.nodeName.substr(1)
     }
     readFromText(text) {
-        return this.tdom.read(text)
+        let res = this.tdom.read(text)
+        if (typeof res == 'string')
+            Util.triggerError('Render error', null, null, '(HTML read error)')
+        return res
     }
     read(dom) {
         let res = this.readFromText(dom.innerHTML)

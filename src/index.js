@@ -70,12 +70,7 @@ export default class Vior {
         this.componentTags = []
         for (let k in this.componentNames) {
             let v = this.componentNames[k]
-            let tmp = v.replace(/([A-Z]{1})/g, '-$1').split('-')
-            tmp.splice(0, 1)
-            for (let k2 in tmp)
-                tmp[k2] = tmp[k2].toLowerCase()
-            v = tmp.join('-')
-            this.componentTags[k] = v
+            this.componentTags[k] = Util.camel2HtmlCase(v)
         }
     }
     mount(elm) {
@@ -125,10 +120,12 @@ export default class Vior {
     }
     
     $triggerEvent(evtName, ...args) {
+        if (! this.componentEvents || ! this.componentEvents[evtName])
+            Util.triggerError('Runtime error', '(component event) ' + evtName, null, '(inner error) please make sure that you have registered the specific component event before you trigger it!')
         try {
             this.componentEvents[evtName](...args)
         } catch (ex) {
-            Util.triggerError('Runtime error', null, null, '(inner error) trigger event error:\nPlease make sure your event which to be triggered is registered.')
+            Util.triggerError('Runtime error', '(component event) ' + evtName, null, ex)
         }
     }
 }

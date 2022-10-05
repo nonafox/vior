@@ -8,34 +8,50 @@
   </head>
   <body>
     <div id="app">
-      <!-- 再重写一下第一个计数器例子 -->
-      <button @click="increase()" :disabled="count >= 10">increase</button>
-      <br />
-      Count: {{ count }}
+      <button @click="add()">添加</button>
+      <ul>
+        <custom-li
+          $for="(k, v) in arr"
+          :key="k"
+          :value="v"
+          @clicknotice="alert($args[0])"
+        >
+          <slot-provider name="invisibleNotice">
+            <strong>我们只显示偶数值哦~</strong>
+          </slot-provider>
+        </custom-li>
+        {{ this }}
+      </ul>
     </div>
     <script type="module">
       import Vior from "../src/index.js";
 
+      let CustomLiComponent = {
+        html: `
+		<li @click="$triggerEvent('onclicknotice', '哎哟你点我干嘛~~哎哟~')">
+			<span $if="key % 2 === 0">Id: {{ value }}</span>
+			<span $else>
+				<slot-receiver name="invisibleNotice"></slot-receiver>
+			</span>
+		</li>
+	`,
+        attrs: ["key", "value"],
+        events: ["onclicknotice"]
+      };
+
       let viorIns = new Vior({
         vars() {
           return {
-            count: 0
+            arr: []
           };
         },
         funcs: {
-          increase() {
-            this.funcs.anotherFunction();
-          },
-          anotherFunction() {
-            this.vars.count++;
+          add() {
+            this.vars.arr.push(this.vars.arr.length + 1);
           }
         },
-        // 唯一的改动是在这加了一个watcher，即监听器
-        // 通过watchers选项添加监听器。在watchers选项里添加与定义的响应性变量同名的函数，即可监听该变量
-        watchers: {
-          count() {
-            console.log("count 变量被更改！");
-          }
+        comps: {
+          CustomLi: CustomLiComponent
         }
       }).mount(document.getElementById("app"));
     </script>

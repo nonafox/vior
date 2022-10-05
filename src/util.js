@@ -101,5 +101,26 @@ export default {
             i ++
         }
         return i
+    },
+    firstCharUpper(text) {
+        return text.substr(0, 1).toUpperCase() + text.substr(1)
+    },
+    firstCharLower(text) {
+        return text.substr(0, 1).toLowerCase() + text.substr(1)
+    },
+    camel2HtmlCase(text) {
+        let tmp = this.firstCharUpper(text).replace(/([A-Z]{1})/g, '-$1').split('-')
+        tmp.splice(0, 1)
+        for (let k2 in tmp)
+            tmp[k2] = tmp[k2].toLowerCase()
+        return tmp.join('-')
+    },
+    html2CamelCase(text) {
+        let tmp = text.split('-'), res = ''
+        for (let k in tmp) {
+            let v = tmp[k]
+            res += this.firstCharUpper(v)
+        }
+        return res
     }
 }
