@@ -232,7 +232,7 @@ let viorIns = new Vior({
         <!-- The strange element is your custom component -->
         <custom-li $for="(k, v) in arr" :key="k" :value="v" @clicknotice="alert($args[0])">
             <!-- pass your slots to the component below using the <slot-provider name="slotName"></...> if you don't you it, and add elements directly, Vior will make them in the slot named `default` -->
-            <!-- Notice! DOM attributesand  -->
+            <!-- Notice! DOM attributes and slots run in the father context -->
             <slot-provider name="invisibleNotice">
                 <strong>Odd numbers only~</strong>
             </slot-provider>
