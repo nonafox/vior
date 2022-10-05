@@ -15,15 +15,14 @@ How did I choose this name? Just like Evan You, using the translator!
 	- dynamic variables
 	- watchers
 - ✅ HTML model engine:
-	- templates
-	- attributes
+	- DOM templates
+	- DOM attributes
+	- DOM properties
 	- events
-	- useful commands
-	- Two-way Binding Values (TBV)
 - ✅ Virtual DOM
 	- best render speed
-	- parse DOM from text dynamically (for `html` command and for SSR later)
-- ✅  Components support
+	- autonomous HTML parsing engine
+- ✅ Components support
 - ⬛ CLI for Node.js (like Vue's CLI)
 - ⬛ Server-Side Render (SSR)
 
