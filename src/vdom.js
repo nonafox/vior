@@ -15,7 +15,7 @@ export default class VDom {
     readFromText(text) {
         let res = this.tdom.read(text)
         if (typeof res == 'string')
-            Util.triggerError('Render error', null, null, '(HTML read error)')
+            Util.triggerError('Parse error', null, null, '(HTML parse error)')
         return res
     }
     read(dom) {
