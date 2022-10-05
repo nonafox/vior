@@ -32,13 +32,15 @@ export default {
         }
     },
     deepCopy(...arrs) {
-        let res = Array.isArray(arrs[0]) ? [] : {},
+        let res = [],
             merges = []
-        for (let _k in arrs) {
+        for (let _k = 0; _k < arrs.length; _k ++) {
             let arr = arrs[_k],
-                _res = Array.isArray(arr) ? [] : {}
-            for (let k in arr) {
-                let v = arr[k]
+                _res = Array.isArray(arr) ? [] : {},
+                keys = Object.keys(arr)
+            for (let kk = 0; kk < keys.length; kk ++) {
+                let k = keys[kk],
+                    v = arr[k]
                 
                 if (this.isPlainObject(v))
                     _res[k] = this.deepCopy(v)
@@ -47,7 +49,7 @@ export default {
             }
             merges.push(_res)
         }
-        for (let k in merges) {
+        for (let k = 0; k < merges.length; k ++) {
             let v = merges[k]
             for (let k2 in v) {
                 let v2 = v[k2]
@@ -62,8 +64,10 @@ export default {
         if (this.isPlainObject(a1) && this.isPlainObject(a2)) {
             if (Array.isArray(a1) && Array.isArray(a2) && a1.length != a2.length)
                 return false
-            let i1 = 0, i2 = 0, res = true
-            for (let k in a1) {
+            let res = true
+            let keys = Object.keys(a1)
+            for (let kk = 0; kk < keys.length; kk ++) {
+                let k = keys[kk]
                 res = res && (() => {
                     let v1 = a1[k],
                         v2 = a2[k]
@@ -75,32 +79,24 @@ export default {
                     }
                     return true
                 })()
-                i1 ++
             }
-            for (let k in a2) {
-                i2 ++
-            }
-            return res && i1 == i2
+            return res && this.realLength(a1) === this.realLength(a2)
         } else {
             return false
         }
     },
     deepIndexof(arr, item) {
-        for (let k in arr) {
-            let v = arr[k]
+        let keys = Object.keys(arr)
+        for (let kk = 0; kk < keys.length; kk ++) {
+            let k = keys[kk],
+                v = arr[k]
             if (this.deepCompare(v, item))
                 return k
         }
         return undefined
     },
     realLength(arr) {
-        if (Array.isArray(arr))
-            return arr.length
-        let i = 0
-        for (let k in arr) {
-            i ++
-        }
-        return i
+        return Object.keys(arr).length
     },
     firstCharUpper(text) {
         return text.substr(0, 1).toUpperCase() + text.substr(1)
@@ -111,14 +107,19 @@ export default {
     camel2HtmlCase(text) {
         let tmp = this.firstCharUpper(text).replace(/([A-Z]{1})/g, '-$1').split('-')
         tmp.splice(0, 1)
-        for (let k2 in tmp)
-            tmp[k2] = tmp[k2].toLowerCase()
+        let keys = Object.keys(tmp)
+        for (let kk = 0; kk < keys.length; kk ++) {
+            let k = keys[kk]
+            tmp[k] = tmp[k].toLowerCase()
+        }
         return tmp.join('-')
     },
     html2CamelCase(text) {
         let tmp = text.split('-'), res = ''
-        for (let k in tmp) {
-            let v = tmp[k]
+        let keys = Object.keys(tmp)
+        for (let kk = 0; kk < keys.length; kk ++) {
+            let k = keys[kk],
+                v = tmp[k]
             res += this.firstCharUpper(v)
         }
         return res
