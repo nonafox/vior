@@ -26,12 +26,18 @@ export default class Vior {
         
         this.triggerHook('created')
     }
-    triggerHook(name) {
+    triggerHook(name, bubbleDown = false) {
         if (this.opts.hooks && this.opts.hooks[name]) {
             try {
                 this.opts.hooks[name].call(this)
             } catch (ex) {
                 Util.triggerError('Runtime error', '(hook) ' + name, '', ex)
+            }
+        }
+        if (bubbleDown && this.$children && this.$children.length) {
+            for (let k in this.$children) {
+                let v = this.$children[k]
+                v.triggerHook(name, true)
             }
         }
     }
@@ -115,7 +121,7 @@ export default class Vior {
         this.originVTree = null
         this.currentVTree = null
         
-        this.triggerHook('unmounted')
+        this.triggerHook('unmounted', true)
         return this
     }
     

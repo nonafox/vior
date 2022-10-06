@@ -143,7 +143,7 @@ let viorIns = new Vior({
         }
     },
     // 定义生命周期钩子的方式——hooks选项
-    // Vior中目前只有created、mounted两个钩子（顾名思义~）
+    // Vior中目前有created（创建实例）、mounted（挂载真实DOM）、unmounted（卸载真实DOM）、uncreated（销毁实例）四个钩子
     hooks: {
         created() {
             this.vars.created = true

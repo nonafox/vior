@@ -143,7 +143,7 @@ let viorIns = new Vior({
         }
     },
     // `hooks` option: the way to define life-cycle hooks
-    // there are only two hooks in Vior: created, mounted
+    // there are four hooks in Vior: created, mounted, unmounted, uncreated
     hooks: {
         created() {
             this.vars.created = true

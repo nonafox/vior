@@ -1,6 +1,6 @@
 import Util from './util.js'
 
-let currentContext, currentContextFavourTag
+let currentContext, currentContextFavourTag, currentContextOnce = false
 
 export default class Dep {
     static createDepContext(_this, func, favourTag = null) {

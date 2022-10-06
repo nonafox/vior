@@ -223,7 +223,8 @@ export default class Renderer {
                 compIndex = _this.componentTags.indexOf(compTag),
                 compName = _this.componentNames[compIndex],
                 compOpts = _this.opts.comps[compName],
-                compIns = null
+                compIns = null,
+                isNewIns = false
             if (cachedCompIns[compName] && cachedCompIns[compName][0]) {
                 compIns = cachedCompIns[compName][0]
                 cachedCompIns[compName].splice(0, 1)
@@ -233,6 +234,7 @@ export default class Renderer {
                 if (! _this.cachedComponentIns[compName])
                     _this.cachedComponentIns[compName] = []
                 _this.cachedComponentIns[compName].push(compIns)
+                isNewIns = true
             }
             
             compIns.$parent = this.viorInstance
@@ -273,6 +275,15 @@ export default class Renderer {
             let res = compIns.renderAsComponent(v)
             res.reverse()
             tree.splice(k, 1)
+            if (isNewIns) {
+                res[0].setup = function () {
+                    try {
+                        this.ctx.__viorInstance.triggerHook('mounted', true)
+                    } catch (ex) {
+                        this.ctx.triggerError('Runtime error', '(hook) mounted', null, ex)
+                    }
+                }
+            }
             for (let k2 in res)
                 tree.splice(k, 0, res[k2])
             k += res.length - 1
@@ -295,11 +306,9 @@ export default class Renderer {
         }
         onode.ctx = Util.deepCopy(defaultCtx, ctx)
         
-        if (rootRender)
+        if (rootRender) {
             cachedCompIns = Util.deepCopy(this.viorInstance.cachedComponentIns)
-        
-        let consoled = ! window.__consoled
-        window.__consoled = true
+        }
         
         for (let k = 0; k < tree.length; k ++) {
             let v = tree[k],
@@ -350,6 +359,20 @@ export default class Renderer {
                 }
             }
         }
+        
+        if (rootRender) {
+            for (let k in cachedCompIns) {
+                let v = cachedCompIns[k]
+                for (let k2 in v) {
+                    let v2 = v[k2],
+                        ori = this.viorInstance.cachedComponentIns
+                    ori[k].splice(ori[k].indexOf(v2), 1)
+                    v2.triggerHook('unmounted')
+                    v2.triggerHook('uncreated')
+                }
+            }
+        }
+        
         return onode
     }
 }

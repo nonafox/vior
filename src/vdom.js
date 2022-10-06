@@ -144,6 +144,9 @@ export default class VDom {
                 this.newNode(dom, [], [], nnode.children, v)
             }
         }
+        
+        if (typeof nnode.setup == 'function')
+            nnode.setup()
     }
     removeNode(pdom, ldl, onode) {
         pdom.removeChild(onode.dom)
@@ -159,6 +162,9 @@ export default class VDom {
         this.patchSameNode(pdom, ldl, otree, onode, ntree, nnode)
         onode.patched = true
         
+        if (typeof nnode.setup == 'function')
+            nnode.setup()
+        
         return true
     }
     patch(onode, nnode, firstPatch = true) {
@@ -170,6 +176,7 @@ export default class VDom {
             let v = otree[k]
             ldl.push(v.dom)
         }
+        
         let s1i = 0, s2i = 0, e1i = otree.length - 1, e2i = ntree.length - 1
         while (s2i <= e2i) {
             let s1e = otree[s1i], s2e = ntree[s2i],
