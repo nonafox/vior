@@ -78,7 +78,7 @@ export default class TDom {
                         } else if (! isTagRead && ! this.isValidName(v) && currentTag) {
                             isTagRead = true
                             currentVNode.tag = currentTag
-                            if (currentTag == 'void')
+                            if (Util.voidTags.indexOf(currentTag) >= 0)
                                 currentVNode.type = 'void'
                             
                             isSelfClosingTag = Util.selfClosingTags.indexOf(currentTag) >= 0

@@ -1,6 +1,7 @@
 export default {
     selfClosingTags: ['br', 'hr', 'area', 'base', 'img', 'input', 'link', 'meta', 'basefont',
                       'param', 'col', 'frame', 'embed', 'keygen', 'source'],
+    voidTags: ['template', 'slot-receiver'],
     
     triggerError(desc, name, code, ex) {
         console.group('[Vior error]:')
@@ -32,7 +33,7 @@ export default {
         }
     },
     deepCopy(...arrs) {
-        let res = [],
+        let res = Array.isArray(arrs[0]) ? [] : {},
             merges = []
         for (let _k = 0; _k < arrs.length; _k ++) {
             let arr = arrs[_k],

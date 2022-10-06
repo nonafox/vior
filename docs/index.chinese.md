@@ -92,15 +92,16 @@ let viorIns = new Vior({
     <button @click="add()">添加</button>
     <ul>
         <!-- 以 $ 开头的属性都是Vior的DOM指令。Vior中所有指令如下： 
-             $for="(key, value) in array" 顾名思义，遍历数组
+             $for="(key, value) in array" 顾名思义，遍历数组或对象
              $if="condition"              根据条件控制元素是否显示
              $else                        顾名思义，意为 否则，搭配 $if 使用
              $elseif                      顾名思义，意为 否则如果，搭配 $if 使用
-             $html                        直接控制DOM的innerHTML，绕开Vior的XSS防护
+             $html                        直接控制DOM的innerHTML，绕开Vior的XSS防护。注意：此指令不可用 ::innerHTML 替代！！！
+             $is                          控制元素的标签名，支持camelCase和html-case
              -->
         <li $for="(key, value) in arr">
             <span $if="key % 2 === 0">Id: {{ value }}</span>
-            <strong $else>我们不显示偶数值哦~</strong>
+            <template $else $is="(key + 1) % 3 === 0 ? 'strong' : 'i'">我们不显示偶数值哦~</template>
         </li>
     </ul>
 </div>
@@ -143,7 +144,7 @@ let viorIns = new Vior({
         }
     },
     // 定义生命周期钩子的方式——hooks选项
-    // Vior中目前有created（创建实例）、mounted（挂载真实DOM）、unmounted（卸载真实DOM）、uncreated（销毁实例）四个钩子
+    // Vior中目前有created（实例创建）、mounted（挂载真实DOM）、unmounted（卸载真实DOM）、uncreated（实例销毁，用于动态的组件实例）四个钩子
     hooks: {
         created() {
             this.vars.created = true
@@ -280,16 +281,21 @@ let viorIns = new Vior({
 ```
 [▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-component-r3t5ik)
 
-# 内部函数/变量
+# 内置元素
+- `<template></...>`: 空元素，效果是只显示其插槽（子元素）内容。
+- `<slot-provider name="slotName"></...>`: 插槽提供者，配合`<slot-receiver></...>`将插槽内容传给组件。
+- `<slot-receiver name="slotName"></...>`: 插槽接收者，接收并放置对应`name`（默认为'default'）的`<slot-provider></...>`提供的插槽内容。
+
+# 内置函数 / 变量
 ### HTML部分
 - `this`: 当前元素的DOM对象。如当前对象为DOM模板，或当前上下文为attribute、property等，则其为`null`。
 - `$this`: 当前的Vior实例对象。**警告！由于Vior内部原因，永远不要在HTML部分的上下文使用`$this.vars`等方式使用响应性变量或函数！**
-- `$args`: 当前DOM事件、或组件事件的回调参数。通常在DOM事件中`$args[0]`的值为DOM event对象。在DOM事件、或组件事件的上下文可用。
+- `$args`: 当前DOM事件、或组件事件的回调参数。通常在DOM事件（非组件事件）中`$args[0]`的值为DOM event对象。在DOM事件、或组件事件的上下文可用。
 
 ### HTML、JS部分共有
 - `$parent`: 父组件Vior实例对象。当在根组件调用时则为`null`。
 - `$children`: 子组件Vior实例数组。
-- `$triggerEvent(eventName, ...args)`: 自定义组件触发事件（冒泡）的方法。
+- `$triggerEvent(eventName, ...args)`: 自定义组件触发事件（冒泡）的方法，提供的`...args`参数可在组件事件上下文通过`$args`获取。
 
 ### JS部分
-- `this`: 当前的Vior实例对象
+- `this`: 当前的Vior实例对象。

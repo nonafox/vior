@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Static Template</title>
+  </head>
+  <body>
+    <div id="app">
+      <button @click="add()">添加</button>
+      <ul>
+        <!-- 以 $ 开头的属性都是Vior的DOM指令。Vior中所有指令如下： 
+             $for="(key, value) in array" 顾名思义，遍历数组
+             $if="condition"              根据条件控制元素是否显示
+             $else                        顾名思义，意为 否则，搭配 $if 使用
+             $elseif                      顾名思义，意为 否则如果，搭配 $if 使用
+             $html                        直接控制DOM的innerHTML，绕开Vior的XSS防护
+             $is                          控制元素的标签名，支持camelCase和html-case
+             -->
+        <li $for="(key, value) in arr">
+          <span $if="key % 2 === 0">Id: {{ value }}</span>
+          <template $else $is="key % 3 === 0 ? 'strong' : 'i'"
+            >我们不显示偶数值哦~</template
+          >
+        </li>
+      </ul>
+    </div>
+    <script type="module">
+      import Vior from "../src/index.js";
+
+      let viorIns = new Vior({
+        vars() {
+          return {
+            arr: []
+          };
+        },
+        funcs: {
+          add() {
+            this.vars.arr.push(this.vars.arr.length + 1);
+          }
+        }
+      }).mount(document.getElementById("app"));
+    </script>
+  </body>
+</html>

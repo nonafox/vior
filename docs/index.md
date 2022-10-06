@@ -92,15 +92,16 @@ let viorIns = new Vior({
     <button @click="add()">Add</button>
     <ul>
         <!-- The attributes starts with `$` are Vior's commands. Here are all of their details:
-             $for="(key, value) in array"   walk through the array
+             $for="(key, value) in array"   walk through the array or object
              $if="condition"                control if the element display according to the condition
              $else                          be used with `$if`, just means `else`
              $elseif                        be used with `$if`, just means `else if`
-             $html                          control DOM's innerHTML without Vior's XSS protecting
+             $html                          control element's property innerHTML without Vior's XSS protecting. don't use `::innerHTML` instead of this!!!
+             $is                            switch the tag of the element. supports camelCase and html-case
              -->
         <li $for="(key, value) in arr">
             <span $if="key % 2 === 0">Id: {{ value }}</span>
-            <strong $else>Odd numbers only~</strong>
+            <template $else $is="(key + 1) % 3 === 0 ? 'strong' : 'i'">Odd numbers only~</template>
         </li>
     </ul>
 </div>
@@ -143,7 +144,7 @@ let viorIns = new Vior({
         }
     },
     // `hooks` option: the way to define life-cycle hooks
-    // there are four hooks in Vior: created, mounted, unmounted, uncreated
+    // there are four hooks in Vior: created, mounted, unmounted, uncreated (uncreated: dynamic components only)
     hooks: {
         created() {
             this.vars.created = true
@@ -279,16 +280,21 @@ let viorIns = new Vior({
 ```
 [▶ Run in codesandbox](https://codesandbox.io/s/vior-component-r3t5ik)
 
+# Inner Elements
+- `<template></...>`: void element. it'll only show its children.
+- `<slot-provider name="slotName"></...>`: slot provider, be used with `<slot-receiver></...>` to pass the slots to components.
+- `<slot-receiver name="slotName"></...>`: slot receiver, will receive and place the slots from `<slot-provider></...>` which has the same `name` (`name` be sets to 'default' when it hasn't been set or there is no slot providers).
+
 # Inner Functions / Variables
 ### HTML part
 - `this`: DOM object for current element. When current element is a DOM template, or the context whitch to use it is in DOM attributes or properties, `this` will be `null`.
 - `$this`: current Vior instance. **Because of Vior's feature, never use it in HTML part to get reactive variables and functions.**
-- `$args`: callback arguments' array for current DOM event or component event. Can be only used in DOM events and component events context.
+- `$args`: callback arguments' array for the current DOM event or component event. Can be only used in DOM events and component events context.
 
 ### HTML & JS part
 - `$parent`: father's Vior instance. When in root component, it'll be `null`.
 - `$children`: children's Vior instances' array.
-- `$triggerEvent(eventName, ...args)`: the way to trigger component events.
+- `$triggerEvent(eventName, ...args)`: the way to trigger component events. `...args` can be used by `$args` in component events' context.
 
 ### JS part
 - `this`: Current Vior instance.

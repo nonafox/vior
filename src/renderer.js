@@ -94,15 +94,15 @@ export default class Renderer {
                 }
                 vars = vars.replace(/[\(\)\[\]{}\s]/g, '').split(',')
                 let { 0: keyName, 1: valName, 2: idName } = vars
-                let arr = this.runInContext(vnode, key, arrCode)
+                let arr = this.runInContext(vnode, oriKey, arrCode)
                 delete vnode.attrs[oriKey]
                 
                 let i = 0, lastNode = vnode
-                let __setDomsNull = (node, setSelfNull = true) => {
+                let setDomsNull = (node, setSelfNull = true) => {
                     if (setSelfNull)
                         node.dom = null
                     for (let kkk in node.children)
-                        __setDomsNull(node.children[kkk])
+                        setDomsNull(node.children[kkk])
                 }
                 for (let k in arr) {
                     let v = arr[k]
@@ -111,11 +111,11 @@ export default class Renderer {
                         if (keyName) vnode.ctx[keyName] = k
                         if (valName) vnode.ctx[valName] = v
                         if (idName) vnode.ctx[idName] = i
-                        __setDomsNull(vnode, false)
+                        setDomsNull(vnode, false)
                     } else {
                         let nnode = Util.deepCopy(ovnode)
                         delete nnode.attrs[oriKey]
-                        __setDomsNull(nnode)
+                        setDomsNull(nnode)
                         
                         let ctx = nnode.ctx
                         if (keyName) ctx[keyName] = k
@@ -132,7 +132,7 @@ export default class Renderer {
                     return
                 }
             } else if (key == 'if') {
-                let res = this.runInContext(vnode, key, val)
+                let res = this.runInContext(vnode, oriKey, val)
                 if (! res)
                     vnode.deleted = true
                 pvnode.ctx.__if_value = res ? true : false
@@ -142,12 +142,22 @@ export default class Renderer {
                     vnode.deleted = true
             } else if (key == 'elseif') {
                 let res = pvnode.ctx.__if_value
-                    res2 = this.runInContext(vnode, key, val)
+                    res2 = this.runInContext(vnode, oriKey, val)
                 if (! (! res && res2))
                     vnode.deleted = true
             } else if (key == 'html') {
-                let res = this.runInContext(vnode, key, val)
+                let res = this.runInContext(vnode, oriKey, val)
                 vnode.children = this.vdom.readFromText(res).children
+            } else if (key == 'is') {
+                if (val) {
+                    vnode.tag = Util.camel2HtmlCase(this.runInContext(vnode, oriKey, val))
+                    if (Util.voidTags.indexOf(vnode.tag) < 0)
+                        vnode.type = 'common'
+                    else
+                        vnode.type = 'void'
+                } else {
+                    Util.triggerError('Render error', oriKey, val, '(inner error) can not set the element tag to null.')
+                }
             }
         } catch (ex) {
             Util.triggerError('Render error', oriKey, val, ex)
@@ -287,15 +297,13 @@ export default class Renderer {
             for (let k2 in res)
                 tree.splice(k, 0, res[k2])
             k += res.length - 1
-        } else if (v.tag == 'slot-receiver' && slots) {
-            v.type = 'void'
+            return { k: k }
+        } else if (v.tag == 'slot-receiver' && slots && Util.realLength(slots)) {
             v.children = slots[v.attrs.name || 'default'] || []
             return null
         } else {
             return null
         }
-        
-        return { k: k }
     }
     render(_onode, ctx = {}, rootRender = true, cachedCompIns = [], slots = []) {
         let onode = rootRender ? Util.deepCopy(_onode) : _onode
@@ -345,7 +353,7 @@ export default class Renderer {
             
             if (v.type == 'text' && v.text)
                 v.text = this.__render(onode, v, ov, 'text', v.text)
-            if (v.children) {
+            if (v.tag && v.children) {
                 let children = this.render(v, v.ctx, false, cachedCompIns, slots).children
                 if (v.type != 'void') {
                     v.children = children
