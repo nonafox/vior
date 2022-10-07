@@ -163,9 +163,10 @@ let viorIns = new Vior({
              $for="(key, value) in array" 顾名思义，遍历数组或对象
              $if="condition"              根据条件控制元素是否显示
              $else                        顾名思义，意为 否则，搭配 $if 使用
-             $elseif                      顾名思义，意为 否则如果，搭配 $if 使用
-             $html                        直接控制DOM的innerHTML，绕开Vior的XSS防护。注意：此指令不可用 ::innerHTML 替代！！！
-             $is                          控制元素的标签名，支持camelCase和html-case
+             $elseif="condition"          顾名思义，意为 否则如果，搭配 $if 使用
+             $html="code"                 直接控制DOM的innerHTML，绕开Vior的XSS防护。注意：此指令不可用 ::innerHTML 替代！！！
+             $is="code"                   控制元素的标签名，支持camelCase和html-case
+             $value="code"                表单双向绑定的指令。参见前面部分文档
              -->
         <li $for="(key, value) in arr">
             <span $if="key % 2 === 0">Id: {{ value }}</span>

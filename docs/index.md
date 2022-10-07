@@ -164,9 +164,10 @@ let viorIns = new Vior({
              $for="(key, value) in array"   walk through the array or object
              $if="condition"                control if the element display according to the condition
              $else                          be used with `$if`, just means `else`
-             $elseif                        be used with `$if`, just means `else if`
-             $html                          control element's property innerHTML without Vior's XSS protecting. don't use `::innerHTML` instead of this!!!
-             $is                            switch the tag of the element. supports camelCase and html-case
+             $elseif="condition"            be used with `$if`, just means `else if`
+             $html="code"                   control element's property innerHTML without Vior's XSS protecting. don't use `::innerHTML` instead of this!!!
+             $is="code"                     switch the tag of the element. supports camelCase and html-case
+             $value="code"                  the way to achieve two-way binding on form components, see above
              -->
         <li $for="(key, value) in arr">
             <span $if="key % 2 === 0">Id: {{ value }}</span>
