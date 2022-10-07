@@ -1,15 +1,17 @@
 # 开始之前
-正如我所说，Vior 只是一个娱乐项目，初衷是锻炼我的技术能力。Vior 的思路跟 Vue 的几乎一模一样，很多功能都跟 Vue 雷同，但 Vior 又有所创新。
+正如我所说，Vior只是一个娱乐项目，初衷是锻炼我的技术能力。Vior的思路跟Vue的几乎一模一样，很多功能都跟Vue雷同，但Vior又有所创新。
 
 目前我专注于性能、新功能的优化与更新，没有那么多的时间精力完善文档，所以我只能临时做一个以示例为基础的“文档”。
 
 # 响应性基础
 ```html
 <div id="app">
-    <!-- 按钮上两个属性分别是DOM事件、DOM attribute。具体形式为：
+    <!-- 按钮上三个属性分别是DOM事件、DOM attribute、DOM property。具体形式为：
          DOM事件:        @eventName="code" // eventName不需要有'on'前缀
-         DOM attribute:  :attribute="code" -->
-    <button @click="count ++" :disabled="count >= 10">+</button>
+         DOM attribute:  :attributeName="code"
+         DOM property:   ::propertyName="code" -->
+    <!-- 这里名为customValue的DOM property可通过 document.getElementById('test').customValue 取得 -->
+    <button id="test" @click="count ++" :disabled="count >= 10" ::custom-value="{ countVal: count }">+</button>
     <br/>
     <!-- 用于显示变量值的DOM模板，形如 {{ xxx }} -->
     计数: {{ count }}
@@ -30,24 +32,90 @@ let viorIns = new Vior({
 ```
 [▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-basicreactive-cfnleh)
 
-# 双向绑定
+# 类 / 样式处理
 ```html
 <div id="app">
-    <!-- 我们通过定义两个数据流实现双向绑定，如下 -->
-    <!-- ::value 是一个DOM property，能实现从Vior到DOM property的数据流
-         @input 为DOM事件属性，实现从DOM property到Vior的数据流。核心是通过与property相关的DOM事件来触发数据更新 -->
-    <input ::value="input" @input="input = this.value"/>
-    <br/>
-    你输入了: {{ input }}
+    <!-- Vior会对类、样式的DOM attribute作特殊处理。 -->
+    
+    <!-- 下面这个例子中，class将被解析为 class="aaa ccc" -->
+    <div :class="{ aaa: true, bbb: false, ccc: 1 }"></div>
+    <!-- 这个例子效果同上 -->
+    <div :class="[{ aaa: true, bbb: false }, { ccc: true }]"></div>
+    
+    <!-- 这里style的解析结果为：style="width: 100px; height: calc(100vh - 10px); --test-var: 'string value';" -->
+    <div :style="{ width: 100, height: 'calc(100vh - 10px)', '--test-var': `'string value'` }"></div>
 </div>
 ```
 ```javascript
 import Vior from 'https://unpkg.com/vior'
+let viorIns = new Vior({}).mount(document.getElementById('app'))
+```
+[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-classtyle-u5ix1d)
+
+# 双向绑定
+```html
+<div id="app">
+    <!-- Vior仿照Vue的做法，对表单组件做了很多特殊处理。
+         在常用表单组件中，你可以通过 $value 指令获取表单组件的值（双向绑定）。
+         只需要观看下面的实例，你就大概掌握了这部分内容： -->
+    
+    <!-- 普通input -->
+    <input type="text" $value="inputVal"/>
+    <br/>
+    <strong>你输入了: </strong>{{ inputVal }}
+    
+    <hr/>
+    
+    <!-- 复选框 -->
+    <input type="checkbox" :value="{ id: 1 }" $value="inputVal1"/>
+    <input type="checkbox" :value="{ id: 2 }" $value="inputVal1"/>
+    <br/>
+    <strong>你选择了: </strong>{{ JSON.stringify(inputVal1) }}
+    
+    <hr/>
+    
+    <!-- 单选框 -->
+    <input name="aaa" type="radio" value="A" $value="inputVal2"/>
+    <input name="aaa" type="radio" value="B" $value="inputVal2"/>
+    <br/>
+    <strong>你选择了: </strong>{{ JSON.stringify(inputVal2) }}
+    
+    <hr/>
+    
+    <!-- 单选select -->
+    <select $value="inputVal3">
+        <option disabled value="">Please select one</option>
+        <option :value="{ a: 1 }">A</option>
+        <option :value="{ b: 1 }">B</option>
+        <option :value="{ c: 1 }">C</option>
+    </select>
+    <br/>
+    <strong>你选择了: </strong>{{ JSON.stringify(inputVal3) }}
+    
+    <hr/>
+    
+    <!-- 多选select -->
+    <select $value="inputVal4" multiple>
+        <option selected disabled value="">Please select multiple items</option>
+        <option>A</option>
+        <option>B</option>
+        <option>C</option>
+    </select>
+    <br/>
+    <strong>你选择了: </strong>{{ JSON.stringify(inputVal4) }}
+</div>
+```
+```javascript
+import Vior from '../src/index.js'
 
 let viorIns = new Vior({
     vars() {
         return {
-            input: 'default value'
+            inputVal: 'default value',
+            inputVal1: [{ id: 1 }],
+            inputVal2: 'A',
+            inputVal3: '',
+            inputVal4: ['A', 'C']
         }
     }
 }).mount(document.getElementById('app'))
@@ -273,7 +341,7 @@ let viorIns = new Vior({
         }
     },
     // 用comps选项注册需要引入的组件，以便在当前组件或根组件中使用
-    // 形式：ComponentName: ComponentOptions（注意：ComponentName需要为camelCase，但在HTML部分中使用则需用HTML case，如<component-name></...>）
+    // 形式：ComponentName: ComponentOptions（注意：ComponentName需要为camelCase，但在HTML部分中使用则需用kebab-case，如<component-name></...>）
     comps: {
         CustomLi: CustomLiComponent
     }

@@ -1,6 +1,7 @@
 export default {
     selfClosingTags: ['br', 'hr', 'area', 'base', 'img', 'input', 'link', 'meta', 'basefont',
                       'param', 'col', 'frame', 'embed', 'keygen', 'source'],
+    inputTags: ['input', 'textarea', 'select'],
     voidTags: ['template', 'slot-receiver'],
     
     triggerError(desc, name, code, ex) {
@@ -105,9 +106,8 @@ export default {
     firstCharLower(text) {
         return text.substr(0, 1).toLowerCase() + text.substr(1)
     },
-    camel2HtmlCase(text) {
-        let tmp = this.firstCharUpper(text).replace(/([A-Z]{1})/g, '-$1').split('-')
-        tmp.splice(0, 1)
+    camel2KebabCase(text) {
+        let tmp = this.firstCharLower(text).replace(/([A-Z]{1})/g, '-$1').split('-')
         let keys = Object.keys(tmp)
         for (let kk = 0; kk < keys.length; kk ++) {
             let k = keys[kk]
@@ -115,7 +115,7 @@ export default {
         }
         return tmp.join('-')
     },
-    html2CamelCase(text) {
+    kebab2CamelCase(text) {
         let tmp = text.split('-'), res = ''
         let keys = Object.keys(tmp)
         for (let kk = 0; kk < keys.length; kk ++) {

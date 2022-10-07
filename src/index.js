@@ -47,7 +47,7 @@ export default class Vior {
             let v = this.opts.funcs[k],
                 _this = this
             this.funcs[k] = function (...args) {
-                _this.opts.funcs[k].call(_this, ...args)
+                return _this.opts.funcs[k].call(_this, ...args)
             }
         }
     }
@@ -76,7 +76,7 @@ export default class Vior {
         this.componentTags = []
         for (let k in this.componentNames) {
             let v = this.componentNames[k]
-            this.componentTags[k] = Util.camel2HtmlCase(v)
+            this.componentTags[k] = Util.camel2KebabCase(v)
         }
     }
     mount(elm) {

@@ -71,4 +71,7 @@ export default class Ref {
     static isRef(obj) {
         return typeof obj.__getRaw == 'function' && obj.__getRaw('__isViorRef')
     }
+    static isArrayRef(obj) {
+        return this.isRef(obj) && obj.__getRaw('__isArray')
+    }
 }

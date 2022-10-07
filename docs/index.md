@@ -6,10 +6,12 @@ Now I'm absorbed in updating and improving, so I had little time to finish the d
 # Reaction Basic
 ```html
 <div id="app">
-    <!-- These two attributes are DOM event and DOM attribute. Details:
+    <!-- These two attributes are DOM event, DOM attribute and DOM property. Details:
          DOM event:        @eventName="code" // `eventName` doen't need an 'on' prefix
-         DOM attribute:    :attribute="code" -->
-    <button @click="count ++" :disabled="count >= 10">+</button>
+         DOM attribute:    :attributeName="code"
+         DOM property:     ::propertyName="code" -->
+    <!-- you can get the DOM property by `document.getElementById('test').customValue` -->
+    <button id="test" @click="count ++" :disabled="count >= 10" ::custom-alue="{ countVal: count }">+</button>
     <br/>
     <!-- DOM templates that used to display the values of reactive variables. They seems like {{ xxx }} -->
     Count: {{ count }}
@@ -30,24 +32,91 @@ let viorIns = new Vior({
 ```
 [▶ Run in codesandbox](https://codesandbox.io/s/vior-basicreactive-cfnleh)
 
-# Two-way Binding
+# Class / Style Handling
 ```html
 <div id="app">
-    <!-- We define two data streams to achieve it. -->
-    <!-- `::value` is a DOM property, and it achieves the stream from Vior to DOM
-         `@input` is a DOM event, and it achieves the stream from DOM to Vior -->
-    <input ::value="input" @input="input = this.value"/>
-    <br/>
-    You input: {{ input }}
+    <!-- Vior will do special handling on class or style attributes -->
+    
+    <!-- here the attribute `class` will be resolved as: class="aaa ccc" -->
+    <div :class="{ aaa: true, bbb: false, ccc: 1 }"></div>
+    <!-- this works as well as the previous one -->
+    <div :class="[{ aaa: true, bbb: false }, { ccc: true }]"></div>
+    
+    <!-- here the attribute `style` will be resolved as:
+         style="width: 100px; height: calc(100vh - 10px); --test-var: 'string value';" -->
+    <div :style="{ width: 100, height: 'calc(100vh - 10px)', '--test-var': `'string value'` }"></div>
 </div>
 ```
 ```javascript
 import Vior from 'https://unpkg.com/vior'
+let viorIns = new Vior({}).mount(document.getElementById('app'))
+```
+[▶ Run in codesandbox](https://codesandbox.io/s/vior-classtyle-u5ix1d)
+
+# Two-way Binding
+```html
+<div id="app">
+    <!-- Vior does a lot of special handling for form components.
+         on most of them, you can use `$value` command to achieve two-way binding.
+         see the examples and learn it! -->
+    
+    <!-- common input -->
+    <input type="text" $value="inputVal"/>
+    <br/>
+    <strong>Input: </strong>{{ inputVal }}
+    
+    <hr/>
+    
+    <!-- multiple box -->
+    <input type="checkbox" :value="{ id: 1 }" $value="inputVal1"/>
+    <input type="checkbox" :value="{ id: 2 }" $value="inputVal1"/>
+    <br/>
+    <strong>你选择了: </strong>{{ JSON.stringify(inputVal1) }}
+    
+    <hr/>
+    
+    <!-- single box -->
+    <input name="aaa" type="radio" value="A" $value="inputVal2"/>
+    <input name="aaa" type="radio" value="B" $value="inputVal2"/>
+    <br/>
+    <strong>Select: </strong>{{ JSON.stringify(inputVal2) }}
+    
+    <hr/>
+    
+    <!-- single select -->
+    <select $value="inputVal3">
+        <option disabled value="">Please select one</option>
+        <option :value="{ a: 1 }">A</option>
+        <option :value="{ b: 1 }">B</option>
+        <option :value="{ c: 1 }">C</option>
+    </select>
+    <br/>
+    <strong>Select: </strong>{{ JSON.stringify(inputVal3) }}
+    
+    <hr/>
+    
+    <!-- mutiple select -->
+    <select $value="inputVal4" multiple>
+        <option selected disabled value="">Please select multiple items</option>
+        <option>A</option>
+        <option>B</option>
+        <option>C</option>
+    </select>
+    <br/>
+    <strong>Select: </strong>{{ JSON.stringify(inputVal4) }}
+</div>
+```
+```javascript
+import Vior from '../src/index.js'
 
 let viorIns = new Vior({
     vars() {
         return {
-            input: 'default value'
+            inputVal: 'default value',
+            inputVal1: [{ id: 1 }],
+            inputVal2: 'A',
+            inputVal3: '',
+            inputVal4: ['A', 'C']
         }
     }
 }).mount(document.getElementById('app'))
@@ -272,7 +341,7 @@ let viorIns = new Vior({
         }
     },
     // the way to require components: `comps` option, in order to use your custom components in HTML part
-    // format: { ComponentName: ComponentOptions, ... } (notice: `ComponentName` takes a camelCase name, but you should use your components in HTML case in HTML part)
+    // format: { ComponentName: ComponentOptions, ... } (notice: `ComponentName` takes a camelCase name, but you should use your components in kebab-case in HTML part)
     comps: {
         CustomLi: CustomLiComponent
     }

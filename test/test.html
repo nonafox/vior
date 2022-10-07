@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title>Static Template</title>
+    </head>
+    <body>
+        <div id="app">
+            <input type="text" $value="inputVal"/>
+            <br/>
+            <strong>Input: </strong>{{ inputVal }}
+            
+            <hr/>
+            
+            <input type="checkbox" :value="{ id: 1 }" $value="inputVal1"/>
+            <input type="checkbox" :value="{ id: 2 }" $value="inputVal1"/>
+            <br/>
+            <strong>Selected: </strong>{{ JSON.stringify(inputVal1) }}
+            
+            <hr/>
+            
+            <input name="aaa" type="radio" value="A" $value="inputVal2"/>
+            <input name="aaa" type="radio" value="B" $value="inputVal2"/>
+            <br/>
+            <strong>Selected: </strong>{{ JSON.stringify(inputVal2) }}
+            
+            <hr/>
+            
+            <select $value="inputVal3">
+                <option disabled value="">Please select one</option>
+                <option :value="{ a: 1 }">A</option>
+                <option :value="{ b: 1 }">B</option>
+                <option :value="{ c: 1 }">C</option>
+            </select>
+            <br/>
+            <strong>Selected: </strong>{{ JSON.stringify(inputVal3) }}
+            
+            <hr/>
+            
+            <select $value="inputVal4" multiple>
+                <option selected disabled value="">Please select multiple items</option>
+                <option>A</option>
+                <option>B</option>
+                <option>C</option>
+            </select>
+            <br/>
+            <strong>Selected: </strong>{{ JSON.stringify(inputVal4) }}
+        </div>
+        <script type="module">
+            import Vior from '../src/index.js'
+            
+            let viorIns = new Vior({
+                vars() {
+                    return {
+                        inputVal: 'default value',
+                        inputVal1: [{ id: 1 }],
+                        inputVal2: 'A',
+                        inputVal3: '',
+                        inputVal4: ['A', 'C']
+                    }
+                },
+                funcs: {
+                    readOpts(hc) {
+                        let list = Object.assign({}, hc), res = []
+                        for (let k in list) {
+                            let v = list[k]
+                            res.push(v.value)
+                        }
+                        return res
+                    }
+                }
+            }).mount(document.getElementById("app"))
+        </script>
+    </body>
+</html>

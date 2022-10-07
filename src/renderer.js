@@ -33,7 +33,7 @@ export default class Renderer {
         let funcsSetup = ''
         for (let kk in funcKeysArr) {
             let k = funcKeysArr[kk]
-            funcsSetup += `let ${k} = function (...args) { __syncVars(); $this.funcs.${k}.call($this, ...args) }; `
+            funcsSetup += `let ${k} = function (...args) { __syncVars(); return $this.funcs.${k}.call($this, ...args) }; `
         }
         let varsSyncSetup = '', refKeys_origin = []
         for (let kk in refKeysArr) {
@@ -45,27 +45,28 @@ export default class Renderer {
         
         let setup = `
             (function ($this) {
-                let ____ctx = ${ctxSetup}
+                let ____ctx = ${ctxSetup},
+                    $util = ____ctx.__util,
+                    $parent = $this.$parent,
+                    $children = $this.$children
                 let __syncVars = () => {
                         try { ${varsSyncSetup} } catch (ex) {
-                            ____ctx.__triggerError('Runtime error', \`${key}\`, null, '(inner error) sync vars error')
+                            $util.triggerError('Runtime error', \`${key}\`, null, '(inner error) sync vars error')
                         }
                     },
                     $triggerEvent = (evtName, ...__args) => {
                         if (! $this.componentEvents || ! $this.componentEvents[evtName])
-                            ____ctx.__triggerError('Runtime error', '(component event) ' + evtName, null, '(inner error) please make sure that you have registered the specific component event before you trigger it!')
+                            $util.triggerError('Runtime error', '(component event) ' + evtName, null, '(inner error) please make sure that you have registered the specific component event before you trigger it!')
                         try { $this.componentEvents[evtName](...__args) } catch (ex) {
-                            ____ctx.__triggerError('Runtime error', '(component event) ' + evtName, null, ex)
+                            $util.triggerError('Runtime error', '(component event) ' + evtName, null, ex)
                         }
                     }
-                let $parent = $this.$parent,
-                    $children = $this.$children
                 let { ${refKeys} } = $this.vars,
                     { ${refKeys_origin} } = $this.vars,
                     { ${ctxKeys} } = ____ctx
                 ${funcsSetup}
                 try { ${code} } catch (ex) {
-                    ____ctx.__triggerError('Runtime error', \`${key}\`, null, ex)
+                    $util.triggerError('Runtime error', \`${key}\`, null, ex)
                 }
                 __syncVars()
             }).call(${thises})
@@ -80,6 +81,31 @@ export default class Renderer {
                 Util.triggerError('Render error', key, oriCode, ex)
             }
         }
+    }
+    pushEvtFunction(data, key, func) {
+        let newKey = '__unhandled_functions__' + key
+        if (! data[newKey])
+            data[newKey] = []
+        data[newKey].push(func)
+    }
+    handleEvtFunctions(vnode) {
+        let res = []
+        for (let _k in vnode.data) {
+            let v = vnode.data[_k]
+            let k = /^__unhandled_functions__(.*)$/.exec(_k)
+            if (! k)
+                continue
+            k = k[1]
+            
+            let _tmp = v.join('; '), tmp
+            tmp = this.runInEvalContext(`function (...$args) { ${_tmp} }`)
+            
+            delete vnode.data[_k]
+            vnode.data[k] = tmp
+            
+            res.push(k)
+        }
+        return res
     }
     parseCommand(pvnode, vnode, ovnode, key, val, oriKey) {
         try {
@@ -150,13 +176,74 @@ export default class Renderer {
                 vnode.children = this.vdom.readFromText(res).children
             } else if (key == 'is') {
                 if (val) {
-                    vnode.tag = Util.camel2HtmlCase(this.runInContext(vnode, oriKey, val))
+                    vnode.tag = Util.camel2KebabCase(this.runInContext(vnode, oriKey, val))
                     if (Util.voidTags.indexOf(vnode.tag) < 0)
                         vnode.type = 'common'
                     else
                         vnode.type = 'void'
                 } else {
                     Util.triggerError('Render error', oriKey, val, '(inner error) can not set the element tag to null.')
+                }
+            } else if (key == 'value') {
+                if (Util.inputTags.indexOf(vnode.tag) < 0)
+                    Util.triggerError('Render error', oriKey, val, '(inner error) can not use `$input` command on non input elements.')
+                let value = this.runInContext(vnode, oriKey, val)
+                if (vnode.tag == 'input' || vnode.tag == 'textarea') {
+                    let type = vnode.attrs.type || '',
+                        code
+                    switch (type) {
+                        case '':
+                        case 'text':
+                            vnode.data.value = value
+                            code = `${val} = this.value`
+                            this.pushEvtFunction(vnode.data, 'oninput', this.runInContext(vnode, oriKey, code, true))
+                            break
+                        case 'checkbox':
+                            let arrayMode = vnode.attrs.value !== undefined && (Array.isArray(value) || Ref.isArrayRef(value))
+                            vnode.data.checked = arrayMode ? Util.deepIndexof(value, vnode.attrs.value) !== undefined : Boolean(value)
+                            vnode.ctx.__special_attr__value = vnode.attrs.value
+                            code = `
+                                if (! ${arrayMode}) {
+                                    ${val} = this.checked
+                                } else {
+                                    let v = this.__viorCtx.__special_attr__value
+                                    if (this.checked) {
+                                        if ($util.deepIndexof(${val}, v) === undefined)
+                                            ${val}.push(v)
+                                    } else {
+                                        if ($util.deepIndexof(${val}, v) !== undefined)
+                                            ${val}.splice($util.deepIndexof(${val}, v), 1)
+                                    }
+                                }
+                            `
+                            this.pushEvtFunction(vnode.data, 'onchange', this.runInContext(vnode, oriKey, code, true))
+                            break
+                        case 'radio':
+                            vnode.data.checked = Util.deepCompare(vnode.attrs.value, value)
+                            code = `${val} = this.value`
+                            this.pushEvtFunction(vnode.data, 'onchange', this.runInContext(vnode, oriKey, code, true))
+                            break
+                        default:
+                            break
+                    }
+                } else if (vnode.tag == 'select') {
+                    let multiple = vnode.attrs.multiple !== undefined && (Array.isArray(value) || Ref.isArrayRef(value))
+                    vnode.ctx.__father_select__value = value
+                    vnode.ctx.__father_select__mutiple = multiple
+                    let code = `
+                        let __readOpts = (arr) => {
+                            let list = Object.assign({}, arr), res = []
+                            for (let k in list) {
+                                let v = list[k],
+                                    sval = v.__viorCtx.__special_attr__value
+                                res.push(sval !== undefined ? sval : v.value)
+                            }
+                            return res
+                        }
+                        let __res = __readOpts(this.selectedOptions)
+                        ${val} = ${multiple} ? __res : __res[0]
+                    `
+                    this.pushEvtFunction(vnode.data, 'onchange', this.runInContext(vnode, oriKey, code, true))
                 }
             }
         } catch (ex) {
@@ -168,22 +255,55 @@ export default class Renderer {
             case 'attr':
                 let { key, val } = data
                 let prefix = data.key.substr(0, 1),
-                    newKey = data.key.substr(1), newVal
+                    newKey = Util.camel2KebabCase(data.key.substr(1)), newVal
                 switch (prefix) {
                     case ':':
-                        if (data.key.substr(0, 2) == '::') {
-                            newKey = data.key.substr(2)
+                        if (key.substr(0, 2) == '::') {
+                            newKey = Util.kebab2camelCase(data.key.substr(2))
                             vnode.data[newKey] = this.runInContext(vnode, key, val)
                             newKey = newVal = null
                             break
                         }
                         newVal = this.runInContext(vnode, key, val)
+                        
+                        let pushClass = (nval) => {
+                            if (typeof newVal != 'string')
+                                newVal = ''
+                            for (let k in nval) {
+                                let v = nval[k]
+                                if (v)
+                                    newVal += Util.camel2KebabCase(k) + ' '
+                            }
+                        }
+                        
+                        if (newKey == 'class') {
+                            if (! Array.isArray(newVal) && ! (Ref.isArrayRef(newVal))) {
+                                pushClass(newVal)
+                            } else {
+                                let nval = newVal
+                                for (let k in nval) {
+                                    let v = nval[k]
+                                    pushClass(v)
+                                }
+                            }
+                            if (vnode.attrs.class)
+                                newVal = vnode.attrs.class + ' ' + newVal
+                            newVal = newVal.replace(/\s$/, '')
+                        } else if (newKey == 'style') {
+                            let res = ''
+                            for (let _k in newVal) {
+                                let k = Util.camel2KebabCase(_k),
+                                    v = newVal[_k]
+                                if (typeof v == 'number')
+                                    v = `${v}px`
+                                res += `${k}: ${v}; `
+                            }
+                            newVal = (vnode.attrs.style || '') + res
+                            newVal = newVal.replace(/\s$/, '')
+                        }
                         break
                     case '@':
-                        newKey = '__unhandled_functions__on' + newKey
-                        let funcs = vnode.data[newKey] || []
-                        funcs.push(this.runInContext(vnode, key, val, true))
-                        vnode.data[newKey] = funcs
+                        this.pushEvtFunction(vnode.data, 'on' + newKey, this.runInContext(vnode, key, val, true))
                         
                         newKey = newVal = null
                         break
@@ -206,25 +326,6 @@ export default class Renderer {
             default:
                 return null
         }
-    }
-    handleEvtFunctions(vnode) {
-        let res = []
-        for (let _k in vnode.data) {
-            let v = vnode.data[_k]
-            let k = /^__unhandled_functions__(.*)$/.exec(_k)
-            if (! k)
-                continue
-            k = k[1]
-            
-            let _tmp = v.join('; '), tmp
-            tmp = this.runInEvalContext(`function (...$args) { ${_tmp} }`)
-            
-            delete vnode.data[_k]
-            vnode.data[k] = tmp
-            
-            res.push(k)
-        }
-        return res
     }
     handleComponent(tree, k, v, slots, cachedCompIns, handledEvtFuncs) {
         if (this.viorInstance.componentTags && this.viorInstance.componentTags.indexOf(v.tag) >= 0) {
@@ -310,7 +411,7 @@ export default class Renderer {
         let tree = onode.children || []
         let defaultCtx = {
             __viorInstance: this.viorInstance,
-            __triggerError: Util.triggerError
+            __util: Util
         }
         onode.ctx = Util.deepCopy(defaultCtx, ctx)
         
@@ -344,6 +445,18 @@ export default class Renderer {
             if (deleted)
                 continue
             let handledEvtFuncs = this.handleEvtFunctions(v)
+            
+            if (v.tag == 'option' && v.ctx.__father_select__value !== undefined) {
+                let fval = v.ctx.__father_select__value,
+                    fmutiple = v.ctx.__father_select__mutiple
+                let tval = v.attrs.value !== undefined ? v.attrs.value : this.vdom.patchFromText(v.children)
+                v.ctx.__special_attr__value = v.attrs.value
+                if (fmutiple ? Util.deepIndexof(fval, tval) : Util.deepCompare(tval, fval)) {
+                    v.attrs.selected = true
+                } else {
+                    v.attrs.selected = false
+                }
+            }
             
             let handleComponentRes = this.handleComponent(tree, k, v, slots, cachedCompIns, handledEvtFuncs)
             if (handleComponentRes) {
