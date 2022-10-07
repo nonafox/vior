@@ -259,7 +259,7 @@ export default class Renderer {
                 switch (prefix) {
                     case ':':
                         if (key.substr(0, 2) == '::') {
-                            newKey = Util.kebab2camelCase(data.key.substr(2))
+                            newKey = Util.kebab2CamelCase(data.key.substr(2))
                             vnode.data[newKey] = this.runInContext(vnode, key, val)
                             newKey = newVal = null
                             break
