@@ -106,7 +106,7 @@ let viorIns = new Vior({}).mount(document.getElementById('app'))
 </div>
 ```
 ```javascript
-import Vior from '../src/index.js'
+import Vior from 'https://unpkg.com/vior'
 
 let viorIns = new Vior({
     vars() {

@@ -71,7 +71,7 @@ let viorIns = new Vior({}).mount(document.getElementById('app'))
     <input type="checkbox" :value="{ id: 1 }" $value="inputVal1"/>
     <input type="checkbox" :value="{ id: 2 }" $value="inputVal1"/>
     <br/>
-    <strong>你选择了: </strong>{{ JSON.stringify(inputVal1) }}
+    <strong>Select: </strong>{{ JSON.stringify(inputVal1) }}
     
     <hr/>
     
@@ -107,7 +107,7 @@ let viorIns = new Vior({}).mount(document.getElementById('app'))
 </div>
 ```
 ```javascript
-import Vior from '../src/index.js'
+import Vior from 'https://unpkg.com/vior'
 
 let viorIns = new Vior({
     vars() {
