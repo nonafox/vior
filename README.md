@@ -18,7 +18,9 @@ How did I choose this name? Just like Evan You, using the translator!
 	- DOM templates
 	- DOM attributes
 	- DOM properties
-	- events
+	- DOM events
+	- commands
+	- special handling for form components
 - ✅ Virtual DOM
 	- best render speed
 	- autonomous HTML parsing engine

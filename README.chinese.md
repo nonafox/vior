@@ -20,6 +20,7 @@ Vior这名儿怎么来的？和[@尤大](https://github.com/yyx990803)一样，�
 	- DOM properties
 	- DOM事件（DOM events）
 	- 命令
+	- 对表单组件的特殊处理
 - ✅ 虚拟DOM
 	- 极致渲染速度
 	- 自主HTML解析引擎
