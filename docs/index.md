@@ -53,76 +53,6 @@ let viorIns = new Vior({}).mount(document.getElementById('app'))
 ```
 [▶ Run in codesandbox](https://codesandbox.io/s/vior-classtyle-u5ix1d)
 
-# Two-way Binding
-```html
-<div id="app">
-    <!-- Vior does a lot of special handling for form components.
-         on most of them, you can use `$value` command to achieve two-way binding.
-         see the examples and learn it! -->
-    
-    <!-- common input -->
-    <input type="text" $value="inputVal"/>
-    <br/>
-    <strong>Input: </strong>{{ inputVal }}
-    
-    <hr/>
-    
-    <!-- multiple box -->
-    <input type="checkbox" :value="{ id: 1 }" $value="inputVal1"/>
-    <input type="checkbox" :value="{ id: 2 }" $value="inputVal1"/>
-    <br/>
-    <strong>Select: </strong>{{ JSON.stringify(inputVal1) }}
-    
-    <hr/>
-    
-    <!-- single box -->
-    <input name="aaa" type="radio" value="A" $value="inputVal2"/>
-    <input name="aaa" type="radio" value="B" $value="inputVal2"/>
-    <br/>
-    <strong>Select: </strong>{{ JSON.stringify(inputVal2) }}
-    
-    <hr/>
-    
-    <!-- single select -->
-    <select $value="inputVal3">
-        <option disabled value="">Please select one</option>
-        <option :value="{ a: 1 }">A</option>
-        <option :value="{ b: 1 }">B</option>
-        <option :value="{ c: 1 }">C</option>
-    </select>
-    <br/>
-    <strong>Select: </strong>{{ JSON.stringify(inputVal3) }}
-    
-    <hr/>
-    
-    <!-- mutiple select -->
-    <select $value="inputVal4" multiple>
-        <option selected disabled value="">Please select multiple items</option>
-        <option>A</option>
-        <option>B</option>
-        <option>C</option>
-    </select>
-    <br/>
-    <strong>Select: </strong>{{ JSON.stringify(inputVal4) }}
-</div>
-```
-```javascript
-import Vior from 'https://unpkg.com/vior'
-
-let viorIns = new Vior({
-    vars() {
-        return {
-            inputVal: 'default value',
-            inputVal1: [{ id: 1 }],
-            inputVal2: 'A',
-            inputVal3: '',
-            inputVal4: ['A', 'C']
-        }
-    }
-}).mount(document.getElementById('app'))
-```
-[▶ Run in codesandbox](https://codesandbox.io/s/vior-twowaybinding-vu11ix)
-
 # Functions
 ```html
 <div id="app">
@@ -167,7 +97,7 @@ let viorIns = new Vior({
              $elseif="condition"            be used with `$if`, just means `else if`
              $html="code"                   control element's property innerHTML without Vior's XSS protecting. don't use `::innerHTML` instead of this!!!
              $is="code"                     switch the tag of the element. supports camelCase and html-case
-             $value="code"                  the way to achieve two-way binding on form components, see above
+             $value="code"                  the way to achieve two-way binding on form elements or custom components, see below
              -->
         <li $for="(key, value) in arr">
             <span $if="key % 2 === 0">Id: {{ value }}</span>
@@ -193,6 +123,152 @@ let viorIns = new Vior({
 }).mount(document.getElementById('app'))
 ```
 [▶ Run in codesandbox](https://codesandbox.io/s/vior-command-z36oyk)
+
+# Custom Components
+```html
+<div id="app">
+    <button @click="add()">Add</button>
+    <ul>
+        <!-- The strange element is your custom component -->
+        <custom-li $for="(k, v) in arr" :key="k" :value="v" @clicknotice="alert($args[0])">
+            <!-- pass your slots to the component below using the <slot-provider name="slotName"></...> if you don't you it, and add elements directly, Vior will make them in the slot named `default` -->
+            <!-- Notice! DOM attributes and slots run in the father context -->
+            <slot-provider name="invisibleNotice">
+                <strong>Odd numbers only~</strong>
+            </slot-provider>
+        </custom-li>
+    </ul>
+</div>
+```
+```javascript
+import Vior from 'https://unpkg.com/vior'
+
+let CustomLiComponent = {
+    html: `
+        <li>
+            <span $if="key % 2 === 0">Id: {{ value }}</span>
+            <span $else @click="$triggerEvent('onclicknotice', 'Why did you click me~')">
+                <!-- receive and place the slots from father using <slot-receiver name="slotName"></...> -->
+                <slot-receiver name="invisibleNotice"></slot-receiver>
+            </span>
+        </li>
+    `,
+    // receive the attributes from father. you can use them like a normal reactive variable like `this.vars.xxx`
+    attrs: ['key', 'value'],
+    // register component events and bubble to father. events can be triggered in component's self by `$triggerEvent(eventName, ...args)`
+    events: ['onclicknotice']
+}
+
+let viorIns = new Vior({
+    vars() {
+        return {
+            arr: []
+        }
+    },
+    funcs: {
+        add() {
+            this.vars.arr.push(this.vars.arr.length + 1)
+        }
+    },
+    // the way to require components: `comps` option, in order to use your custom components in HTML part
+    // format: { ComponentName: ComponentOptions, ... } (notice: `ComponentName` takes a camelCase name, but you should use your components in kebab-case in HTML part)
+    comps: {
+        CustomLi: CustomLiComponent
+    }
+}).mount(document.getElementById('app'))
+```
+[▶ Run in codesandbox](https://codesandbox.io/s/vior-component-r3t5ik)
+
+# Two-way Binding
+```html
+<div id="app">
+    <!-- Vior does a lot of special handling for form elements.
+         on most of them, you can use `$value` command to achieve two-way binding.
+         see the examples and learn it! -->
+    
+    <!-- common input -->
+    <input type="text" $value="inputVal"/>
+    <br/>
+    <strong>Input: </strong>{{ inputVal }}
+    
+    <hr/>
+    
+    <!-- multiple box -->
+    <input type="checkbox" :value="{ id: 1 }" $value="inputVal1"/>
+    <input type="checkbox" :value="{ id: 2 }" $value="inputVal1"/>
+    <br/>
+    <strong>Select: </strong>{{ JSON.stringify(inputVal1) }}
+    
+    <hr/>
+    
+    <!-- single box -->
+    <input name="aaa" type="radio" value="A" $value="inputVal2"/>
+    <input name="aaa" type="radio" value="B" $value="inputVal2"/>
+    <br/>
+    <strong>Select: </strong>{{ JSON.stringify(inputVal2) }}
+    
+    <hr/>
+    
+    <!-- single select -->
+    <select $value="inputVal3">
+        <option disabled value="">Please select one</option>
+        <option :value="{ a: 1 }">A</option>
+        <option :value="{ b: 1 }">B</option>
+        <option :value="{ c: 1 }">C</option>
+    </select>
+    <br/>
+    <strong>Select: </strong>{{ JSON.stringify(inputVal3) }}
+    
+    <hr/>
+    
+    <!-- mutiple select -->
+    <select $value="inputVal4" multiple>
+        <option disabled value="">Please select multiple items</option>
+        <option>A</option>
+        <option>B</option>
+        <option>C</option>
+    </select>
+    <br/>
+    <strong>Select: </strong>{{ JSON.stringify(inputVal4) }}
+    
+    <hr/>
+    
+    <!-- custom components -->
+    <custom-component $value="inputVal5"></custom-component>
+    <br/>
+    <strong>Input: </strong>{{ inputVal5 }}
+</div>
+```
+```javascript
+import Vior from 'https://unpkg.com/vior'
+
+let customComponent = {
+    // when using `$value` command on custom components, Vior will provide an attribute called `$value` for the component, its value is from father.
+    // and when you need, you should trigger a component event called `on$value` and pass a argument which has the value to pass to father.
+    html: `
+        <textarea $value="$value" @input="$triggerEvent('on$value', this.value)"></textarea>
+    `,
+    attrs: ['$value'],
+    events: ['on$value']
+}
+
+let viorIns = new Vior({
+    vars() {
+        return {
+            inputVal: 'default value',
+            inputVal1: [{ id: 1 }],
+            inputVal2: 'A',
+            inputVal3: '',
+            inputVal4: ['A', 'C'],
+            inputVal5: 'test'
+        }
+    },
+    comps: {
+        'custom-component': customComponent
+    }
+}).mount(document.getElementById('app'))
+```
+[▶ Run in codesandbox](https://codesandbox.io/s/vior-twowaybinding-vu11ix)
 
 # Life-cycle Hooks
 ```html
@@ -294,61 +370,6 @@ let viorIns = new Vior({
 }).mount(document.getElementById('app'))
 ```
 [▶ Run in codesandbox](https://codesandbox.io/s/vior-dynamicvar-ue6g8w)
-
-# Custom Components
-```html
-<div id="app">
-    <button @click="add()">Add</button>
-    <ul>
-        <!-- The strange element is your custom component -->
-        <custom-li $for="(k, v) in arr" :key="k" :value="v" @clicknotice="alert($args[0])">
-            <!-- pass your slots to the component below using the <slot-provider name="slotName"></...> if you don't you it, and add elements directly, Vior will make them in the slot named `default` -->
-            <!-- Notice! DOM attributes and slots run in the father context -->
-            <slot-provider name="invisibleNotice">
-                <strong>Odd numbers only~</strong>
-            </slot-provider>
-        </custom-li>
-    </ul>
-</div>
-```
-```javascript
-import Vior from 'https://unpkg.com/vior'
-
-let CustomLiComponent = {
-    html: `
-        <li>
-            <span $if="key % 2 === 0">Id: {{ value }}</span>
-            <span $else @click="$triggerEvent('onclicknotice', 'Why did you click me~')">
-                <!-- receive and place the slots from father using <slot-receiver name="slotName"></...> -->
-                <slot-receiver name="invisibleNotice"></slot-receiver>
-            </span>
-        </li>
-    `,
-    // receive the attributes from father. you can use them like a normal reactive variable like `this.vars.xxx`
-    attrs: ['key', 'value'],
-    // register component events and bubble to father. events can be triggered in component's self by `$triggerEvent(eventName, ...args)`
-    events: ['onclicknotice']
-}
-
-let viorIns = new Vior({
-    vars() {
-        return {
-            arr: []
-        }
-    },
-    funcs: {
-        add() {
-            this.vars.arr.push(this.vars.arr.length + 1)
-        }
-    },
-    // the way to require components: `comps` option, in order to use your custom components in HTML part
-    // format: { ComponentName: ComponentOptions, ... } (notice: `ComponentName` takes a camelCase name, but you should use your components in kebab-case in HTML part)
-    comps: {
-        CustomLi: CustomLiComponent
-    }
-}).mount(document.getElementById('app'))
-```
-[▶ Run in codesandbox](https://codesandbox.io/s/vior-component-r3t5ik)
 
 # Inner Elements
 - `<template></...>`: void element. it'll only show its children.

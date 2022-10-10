@@ -52,76 +52,6 @@ let viorIns = new Vior({}).mount(document.getElementById('app'))
 ```
 [▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-classtyle-u5ix1d)
 
-# 双向绑定
-```html
-<div id="app">
-    <!-- Vior仿照Vue的做法，对表单组件做了很多特殊处理。
-         在常用表单组件中，你可以通过 $value 指令获取表单组件的值（双向绑定）。
-         只需要观看下面的实例，你就大概掌握了这部分内容： -->
-    
-    <!-- 普通input -->
-    <input type="text" $value="inputVal"/>
-    <br/>
-    <strong>你输入了: </strong>{{ inputVal }}
-    
-    <hr/>
-    
-    <!-- 复选框 -->
-    <input type="checkbox" :value="{ id: 1 }" $value="inputVal1"/>
-    <input type="checkbox" :value="{ id: 2 }" $value="inputVal1"/>
-    <br/>
-    <strong>你选择了: </strong>{{ JSON.stringify(inputVal1) }}
-    
-    <hr/>
-    
-    <!-- 单选框 -->
-    <input name="aaa" type="radio" value="A" $value="inputVal2"/>
-    <input name="aaa" type="radio" value="B" $value="inputVal2"/>
-    <br/>
-    <strong>你选择了: </strong>{{ JSON.stringify(inputVal2) }}
-    
-    <hr/>
-    
-    <!-- 单选select -->
-    <select $value="inputVal3">
-        <option disabled value="">Please select one</option>
-        <option :value="{ a: 1 }">A</option>
-        <option :value="{ b: 1 }">B</option>
-        <option :value="{ c: 1 }">C</option>
-    </select>
-    <br/>
-    <strong>你选择了: </strong>{{ JSON.stringify(inputVal3) }}
-    
-    <hr/>
-    
-    <!-- 多选select -->
-    <select $value="inputVal4" multiple>
-        <option selected disabled value="">Please select multiple items</option>
-        <option>A</option>
-        <option>B</option>
-        <option>C</option>
-    </select>
-    <br/>
-    <strong>你选择了: </strong>{{ JSON.stringify(inputVal4) }}
-</div>
-```
-```javascript
-import Vior from 'https://unpkg.com/vior'
-
-let viorIns = new Vior({
-    vars() {
-        return {
-            inputVal: 'default value',
-            inputVal1: [{ id: 1 }],
-            inputVal2: 'A',
-            inputVal3: '',
-            inputVal4: ['A', 'C']
-        }
-    }
-}).mount(document.getElementById('app'))
-```
-[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-twowaybinding-vu11ix)
-
 # 函数
 ```html
 <div id="app">
@@ -166,7 +96,7 @@ let viorIns = new Vior({
              $elseif="condition"          顾名思义，意为 否则如果，搭配 $if 使用
              $html="code"                 直接控制DOM的innerHTML，绕开Vior的XSS防护。注意：此指令不可用 ::innerHTML 替代！！！
              $is="code"                   控制元素的标签名，支持camelCase和html-case
-             $value="code"                表单双向绑定的指令。参见前面部分文档
+             $value="code"                实现表单双向绑定的指令。参见后面部分文档
              -->
         <li $for="(key, value) in arr">
             <span $if="key % 2 === 0">Id: {{ value }}</span>
@@ -192,6 +122,152 @@ let viorIns = new Vior({
 }).mount(document.getElementById('app'))
 ```
 [▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-command-z36oyk)
+
+# 自定义组件
+```html
+<div id="app">
+    <button @click="add()">添加</button>
+    <ul>
+        <!-- 这个奇怪的元素即是自定义组件。 -->
+        <custom-li $for="(k, v) in arr" :key="k" :value="v" @clicknotice="alert($args[0])">
+            <!-- 可以通过 <slot-provider name="slotName"></...> 将插槽内容传给组件，组件对其的处理见下。也可以不加该标签，直接向inner添加元素，这样Vior默认会将其标记为名为default的插槽。支持多个插槽，也支持 inner + <slot-provider></...> 结合的方式 -->
+            <!-- 注意！自定义组件的attributes、slots将在自定义组件的父组件上下文中运行 -->
+            <slot-provider name="invisibleNotice">
+                <strong>我们只显示偶数值哦~</strong>
+            </slot-provider>
+        </custom-li>
+    </ul>
+</div>
+```
+```javascript
+import Vior from 'https://unpkg.com/vior'
+
+let CustomLiComponent = {
+    html: `
+        <li>
+            <span $if="key % 2 === 0">Id: {{ value }}</span>
+            <span $else @click="$triggerEvent('onclicknotice', '哎哟你点我干嘛~~哎哟~')">
+                <!-- 通过 <slot-receiver name="slotName"></...> 接收并放置父组件传下来的插槽 -->
+                <slot-receiver name="invisibleNotice"></slot-receiver>
+            </span>
+        </li>
+    `,
+    // 通过attrs接收父组件传下来的attribute。接收到的attribute将会保留其名称存放到 this.vars 中，可作为一个正常响应性变量来使用
+    attrs: ['key', 'value'],
+    // 注册组件的事件（向上冒泡），可用 $triggerEvent(eventName, ...args) 触发
+    events: ['onclicknotice']
+}
+
+let viorIns = new Vior({
+    vars() {
+        return {
+            arr: []
+        }
+    },
+    funcs: {
+        add() {
+            this.vars.arr.push(this.vars.arr.length + 1)
+        }
+    },
+    // 用comps选项注册需要引入的组件，以便在当前组件或根组件中使用
+    // 形式：ComponentName: ComponentOptions（注意：ComponentName需要为camelCase，但在HTML部分中使用则需用kebab-case，如<component-name></...>）
+    comps: {
+        CustomLi: CustomLiComponent
+    }
+}).mount(document.getElementById('app'))
+```
+[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-component-r3t5ik)
+
+# 双向绑定
+```html
+<div id="app">
+    <!-- Vior仿照Vue的做法，对表单元素做了很多特殊处理。
+         在常用表单元素中，你可以通过 $value 指令获取表单组件的值（双向绑定）。
+         只需要观看下面的实例，你就大概掌握了这部分内容： -->
+    
+    <!-- 普通input -->
+    <input type="text" $value="inputVal"/>
+    <br/>
+    <strong>你输入了: </strong>{{ inputVal }}
+    
+    <hr/>
+    
+    <!-- 复选框 -->
+    <input type="checkbox" :value="{ id: 1 }" $value="inputVal1"/>
+    <input type="checkbox" :value="{ id: 2 }" $value="inputVal1"/>
+    <br/>
+    <strong>你选择了: </strong>{{ JSON.stringify(inputVal1) }}
+    
+    <hr/>
+    
+    <!-- 单选框 -->
+    <input name="aaa" type="radio" value="A" $value="inputVal2"/>
+    <input name="aaa" type="radio" value="B" $value="inputVal2"/>
+    <br/>
+    <strong>你选择了: </strong>{{ JSON.stringify(inputVal2) }}
+    
+    <hr/>
+    
+    <!-- 单选select -->
+    <select $value="inputVal3">
+        <option disabled value="">Please select one</option>
+        <option :value="{ a: 1 }">A</option>
+        <option :value="{ b: 1 }">B</option>
+        <option :value="{ c: 1 }">C</option>
+    </select>
+    <br/>
+    <strong>你选择了: </strong>{{ JSON.stringify(inputVal3) }}
+    
+    <hr/>
+    
+    <!-- 多选select -->
+    <select $value="inputVal4" multiple>
+        <option disabled value="">Please select multiple items</option>
+        <option>A</option>
+        <option>B</option>
+        <option>C</option>
+    </select>
+    <br/>
+    <strong>你选择了: </strong>{{ JSON.stringify(inputVal4) }}
+    
+    <hr/>
+    
+    <!-- 自定义组件 -->
+    <custom-component $value="inputVal5"></custom-component>
+    <br/>
+    <strong>你输入了: </strong>{{ inputVal5 }}
+</div>
+```
+```javascript
+import Vior from 'https://unpkg.com/vior'
+
+let customComponent = {
+    // 在自定义组件上使用 $value 命令，Vior会向组件提供一个名为 $value 的attribute，此值即为父组件父组件传来的值。
+    // 而子组件向父组件传值，则需要通过触发名为 on$value 的组件事件，并提供一个参数，其值为要传的值。
+    html: `
+        <textarea $value="$value" @input="$triggerEvent('on$value', this.value)"></textarea>
+    `,
+    attrs: ['$value'],
+    events: ['on$value']
+}
+
+let viorIns = new Vior({
+    vars() {
+        return {
+            inputVal: 'default value',
+            inputVal1: [{ id: 1 }],
+            inputVal2: 'A',
+            inputVal3: '',
+            inputVal4: ['A', 'C'],
+            inputVal5: 'test'
+        }
+    },
+    comps: {
+        'custom-component': customComponent
+    }
+}).mount(document.getElementById('app'))
+```
+[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-twowaybinding-vu11ix)
 
 # 生命周期钩子
 ```html
@@ -294,61 +370,6 @@ let viorIns = new Vior({
 }).mount(document.getElementById('app'))
 ```
 [▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-dynamicvar-ue6g8w)
-
-# 自定义组件
-```html
-<div id="app">
-    <button @click="add()">添加</button>
-    <ul>
-        <!-- 这个奇怪的元素即是自定义组件。 -->
-        <custom-li $for="(k, v) in arr" :key="k" :value="v" @clicknotice="alert($args[0])">
-            <!-- 可以通过 <slot-provider name="slotName"></...> 将插槽内容传给组件，组件对其的处理见下。也可以不加该标签，直接向inner添加元素，这样Vior默认会将其标记为名为default的插槽。支持多个插槽，也支持 inner + <slot-provider></...> 结合的方式 -->
-            <!-- 注意！自定义组件的attributes、slots将在自定义组件的父组件上下文中运行 -->
-            <slot-provider name="invisibleNotice">
-                <strong>我们只显示偶数值哦~</strong>
-            </slot-provider>
-        </custom-li>
-    </ul>
-</div>
-```
-```javascript
-import Vior from 'https://unpkg.com/vior'
-
-let CustomLiComponent = {
-    html: `
-        <li>
-            <span $if="key % 2 === 0">Id: {{ value }}</span>
-            <span $else @click="$triggerEvent('onclicknotice', '哎哟你点我干嘛~~哎哟~')">
-                <!-- 通过 <slot-receiver name="slotName"></...> 接收并放置父组件传下来的插槽 -->
-                <slot-receiver name="invisibleNotice"></slot-receiver>
-            </span>
-        </li>
-    `,
-    // 通过attrs接收父组件传下来的attribute。接收到的attribute将会保留其名称存放到 this.vars 中，可作为一个正常响应性变量来使用
-    attrs: ['key', 'value'],
-    // 注册组件的事件（向上冒泡），可用 $triggerEvent(eventName, ...args) 触发
-    events: ['onclicknotice']
-}
-
-let viorIns = new Vior({
-    vars() {
-        return {
-            arr: []
-        }
-    },
-    funcs: {
-        add() {
-            this.vars.arr.push(this.vars.arr.length + 1)
-        }
-    },
-    // 用comps选项注册需要引入的组件，以便在当前组件或根组件中使用
-    // 形式：ComponentName: ComponentOptions（注意：ComponentName需要为camelCase，但在HTML部分中使用则需用kebab-case，如<component-name></...>）
-    comps: {
-        CustomLi: CustomLiComponent
-    }
-}).mount(document.getElementById('app'))
-```
-[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-component-r3t5ik)
 
 # 内置元素
 - `<template></...>`: 空元素，效果是只显示其插槽（子元素）内容。

@@ -13,6 +13,12 @@ export default class Vior {
         if (opts.html) {
             this.html = opts.html
             this.originVTree = this.vdom.readFromText(opts.html)
+            if (opts.events) {
+                for (let k in opts.events) {
+                    let v = opts.events[k]
+                    opts.events[k] = Util.kebab2CamelCase(v).toLowerCase()
+                }
+            }
             this.isComponent = true
         }
         
@@ -21,7 +27,6 @@ export default class Vior {
         this.vars = Ref.createRef(this, opts.vars ? opts.vars() : {})
         this.handleDynamicRefs()
         this.handleWatchers()
-        
         this.handleComponents()
         
         this.triggerHook('created')
@@ -126,6 +131,7 @@ export default class Vior {
     }
     
     $triggerEvent(evtName, ...args) {
+        evtName = Util.kebab2CamelCase(evtName).toLowerCase()
         if (! this.componentEvents || ! this.componentEvents[evtName])
             Util.triggerError('Runtime error', '(component event) ' + evtName, null, '(inner error) please make sure that you have registered the specific component event before you trigger it!')
         try {

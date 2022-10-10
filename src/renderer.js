@@ -55,6 +55,7 @@ export default class Renderer {
                         }
                     },
                     $triggerEvent = (evtName, ...__args) => {
+                        evtName = $util.kebab2CamelCase(evtName).toLowerCase()
                         if (! $this.componentEvents || ! $this.componentEvents[evtName])
                             $util.triggerError('Runtime error', '(component event) ' + evtName, null, '(inner error) please make sure that you have registered the specific component event before you trigger it!')
                         try { $this.componentEvents[evtName](...__args) } catch (ex) {
@@ -185,65 +186,70 @@ export default class Renderer {
                     Util.triggerError('Render error', oriKey, val, '(inner error) can not set the element tag to null.')
                 }
             } else if (key == 'value') {
-                if (Util.inputTags.indexOf(vnode.tag) < 0)
-                    Util.triggerError('Render error', oriKey, val, '(inner error) can not use `$input` command on non input elements.')
                 let value = this.runInContext(vnode, oriKey, val)
-                if (vnode.tag == 'input' || vnode.tag == 'textarea') {
-                    let type = vnode.attrs.type || '',
-                        code
-                    switch (type) {
-                        case '':
-                        case 'text':
-                            vnode.data.value = value
-                            code = `${val} = this.value`
-                            this.pushEvtFunction(vnode.data, 'oninput', this.runInContext(vnode, oriKey, code, true))
-                            break
-                        case 'checkbox':
-                            let arrayMode = vnode.attrs.value !== undefined && (Array.isArray(value) || Ref.isArrayRef(value))
-                            vnode.data.checked = arrayMode ? Util.deepIndexof(value, vnode.attrs.value) !== undefined : Boolean(value)
-                            vnode.ctx.__special_attr__value = vnode.attrs.value
-                            code = `
-                                if (! ${arrayMode}) {
-                                    ${val} = this.checked
-                                } else {
-                                    let v = this.__viorCtx.__special_attr__value
-                                    if (this.checked) {
-                                        if ($util.deepIndexof(${val}, v) === undefined)
-                                            ${val}.push(v)
+                if (Util.inputTags.indexOf(vnode.tag) >= 0) {
+                    if (vnode.tag == 'input' || vnode.tag == 'textarea') {
+                        let type = vnode.attrs.type || '',
+                            code
+                        switch (type) {
+                            case '':
+                            case 'text':
+                                vnode.data.value = value
+                                code = `${val} = this.value`
+                                this.pushEvtFunction(vnode.data, 'oninput', this.runInContext(vnode, oriKey, code, true))
+                                break
+                            case 'checkbox':
+                                let arrayMode = vnode.attrs.value !== undefined && (Array.isArray(value) || Ref.isArrayRef(value))
+                                vnode.data.checked = arrayMode ? Util.deepIndexof(value, vnode.attrs.value) !== undefined : Boolean(value)
+                                vnode.ctx.__special_attr__value = vnode.attrs.value
+                                code = `
+                                    if (! ${arrayMode}) {
+                                        ${val} = this.checked
                                     } else {
-                                        if ($util.deepIndexof(${val}, v) !== undefined)
-                                            ${val}.splice($util.deepIndexof(${val}, v), 1)
+                                        let v = this.__viorCtx.__special_attr__value
+                                        if (this.checked) {
+                                            if ($util.deepIndexof(${val}, v) === undefined)
+                                                ${val}.push(v)
+                                        } else {
+                                            if ($util.deepIndexof(${val}, v) !== undefined)
+                                                ${val}.splice($util.deepIndexof(${val}, v), 1)
+                                        }
                                     }
-                                }
-                            `
-                            this.pushEvtFunction(vnode.data, 'onchange', this.runInContext(vnode, oriKey, code, true))
-                            break
-                        case 'radio':
-                            vnode.data.checked = Util.deepCompare(vnode.attrs.value, value)
-                            code = `${val} = this.value`
-                            this.pushEvtFunction(vnode.data, 'onchange', this.runInContext(vnode, oriKey, code, true))
-                            break
-                        default:
-                            break
-                    }
-                } else if (vnode.tag == 'select') {
-                    let multiple = vnode.attrs.multiple !== undefined && (Array.isArray(value) || Ref.isArrayRef(value))
-                    vnode.ctx.__father_select__value = value
-                    vnode.ctx.__father_select__mutiple = multiple
-                    let code = `
-                        let __readOpts = (arr) => {
-                            let list = Object.assign({}, arr), res = []
-                            for (let k in list) {
-                                let v = list[k],
-                                    sval = v.__viorCtx.__special_attr__value
-                                res.push(sval !== undefined ? sval : v.value)
-                            }
-                            return res
+                                `
+                                this.pushEvtFunction(vnode.data, 'onchange', this.runInContext(vnode, oriKey, code, true))
+                                break
+                            case 'radio':
+                                vnode.data.checked = Util.deepCompare(vnode.attrs.value, value)
+                                code = `${val} = this.value`
+                                this.pushEvtFunction(vnode.data, 'onchange', this.runInContext(vnode, oriKey, code, true))
+                                break
+                            default:
+                                break
                         }
-                        let __res = __readOpts(this.selectedOptions)
-                        ${val} = ${multiple} ? __res : __res[0]
-                    `
-                    this.pushEvtFunction(vnode.data, 'onchange', this.runInContext(vnode, oriKey, code, true))
+                    } else if (vnode.tag == 'select') {
+                        let multiple = vnode.attrs.multiple !== undefined && (Array.isArray(value) || Ref.isArrayRef(value))
+                        vnode.ctx.__father_select__value = value
+                        vnode.ctx.__father_select__mutiple = multiple
+                        let code = `
+                            let __readOpts = (arr) => {
+                                let list = Object.assign({}, arr), res = []
+                                for (let k in list) {
+                                    let v = list[k],
+                                        sval = v.__viorCtx.__special_attr__value
+                                    res.push(sval !== undefined ? sval : v.value)
+                                }
+                                return res
+                            }
+                            let __res = __readOpts(this.selectedOptions)
+                            ${val} = ${multiple} ? __res : __res[0]
+                        `
+                        this.pushEvtFunction(vnode.data, 'onchange', this.runInContext(vnode, oriKey, code, true))
+                    }
+                } else if (this.viorInstance.componentTags && this.viorInstance.componentTags.indexOf(vnode.tag) >= 0) {
+                    vnode.attrs.$value = value
+                    let code = `${val} = $args[0]`
+                    this.pushEvtFunction(vnode.data, 'on$value', this.runInContext(vnode, oriKey, code, true))
+                    return true
                 }
             }
         } catch (ex) {
@@ -303,13 +309,18 @@ export default class Renderer {
                         }
                         break
                     case '@':
-                        this.pushEvtFunction(vnode.data, 'on' + newKey, this.runInContext(vnode, key, val, true))
-                        
+                        let nativeName = Util.kebab2CamelCase(newKey).toLowerCase()
+                        this.pushEvtFunction(vnode.data, 'on' + nativeName, this.runInContext(vnode, key, val, true))
                         newKey = newVal = null
                         break
                     case '$':
-                        this.parseCommand(pvnode, vnode, ovnode, newKey, val, key)
-                        newKey = newVal = null
+                        let res = this.parseCommand(pvnode, vnode, ovnode, newKey, val, key)
+                        if (! res) {
+                            newKey = newVal = null
+                        } else {
+                            newKey = key
+                            newVal = vnode.attrs[newKey]
+                        }
                         break
                     default:
                         newKey = key
