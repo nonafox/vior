@@ -1,11 +1,8 @@
 {
     "name": "vior",
-    "version": "0.4.10",
+    "version": "0.4.11",
     "description": "A mini copy of Vue made on my own.",
     "main": "src/index.js",
-    "directories": {
-        "test": "test"
-    },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
