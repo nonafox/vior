@@ -254,26 +254,27 @@ export default class Renderer {
             } else if (key == 'ref') {
                 let value = this.runInContext(vnode, oriKey, val),
                     multiple = value && (Array.isArray(value) || Ref.isArrayRef(value))
-                let code = `
-                    if (! ${multiple})
-                        ${val} = this
-                    else if (${val}.indexOf(this) < 0)
-                        ${val}.push(this)
-                `
-                this.pushEvtFunction(vnode.data, 'on$setup', this.runInContext(vnode, oriKey, code, true))
-                code = `
-                    if (! ${multiple})
-                        ${val} = null
-                    else if (${val}.indexOf(this) >= 0)
-                        ${val}.splice(${val}.indexOf(this), 1)
-                `
-                this.pushEvtFunction(vnode.data, 'on$unsetup', this.runInContext(vnode, oriKey, code, true))
                 
+                let runInEvalContext = this.runInEvalContext, _this = this
                 vnode.setups.push(function (node, dom) {
-                    dom.on$setup()
+                    runInEvalContext(`
+                        (function () {
+                            if (! ${multiple})
+                                __ctx.thisIns.vars.${val} = __ctx.domIns
+                            else if (__ctx.thisIns.vars.${val}.indexOf(__ctx.domIns) < 0)
+                                __ctx.thisIns.vars.${val}.push(__ctx.domIns)
+                        })()
+                    `, { thisIns: _this.viorInstance, domIns: dom })
                 })
                 vnode.unsetups.push(function (node, dom) {
-                    dom.on$unsetup()
+                    runInEvalContext(`
+                        (function () {
+                            if (! ${multiple})
+                                __ctx.thisIns.vars.${val} = null
+                            else if (__ctx.thisIns.vars.${val}.indexOf(__ctx.domIns) >= 0)
+                                __ctx.thisIns.vars.${val}.splice(__ctx.domIns, 1)
+                        )()
+                    `, { thisIns: _this.viorInstance, domIns: dom })
                 })
                 vnode.data.__special_attr__ref_origin = this.viorInstance
                 vnode.data.__special_attr__ref_code = val
