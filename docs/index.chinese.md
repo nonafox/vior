@@ -97,6 +97,7 @@ let viorIns = new Vior({
              $html="code"                 直接控制DOM的innerHTML，绕开Vior的XSS防护。注意：此指令不可用 ::innerHTML 替代！！！
              $is="code"                   控制元素的标签名，支持camelCase和html-case
              $value="code"                实现表单双向绑定的指令。参见后面部分文档
+             $ref="code"                  实现实例引用的指令。参见后面部分文档
              -->
         <li $for="(key, value) in arr">
             <span $if="key % 2 === 0">Id: {{ value }}</span>
@@ -242,7 +243,7 @@ let viorIns = new Vior({
 import Vior from 'https://unpkg.com/vior'
 
 let customComponent = {
-    // 在自定义组件上使用 $value 命令，Vior会向组件提供一个名为 $value 的attribute，此值即为父组件父组件传来的值。
+    // 在自定义组件上使用 $value 指令，Vior会向组件提供一个名为 $value 的attribute，此值即为父组件父组件传来的值。
     // 而子组件向父组件传值，则需要通过触发名为 on$value 的组件事件，并提供一个参数，其值为要传的值。
     html: `
         <textarea $value="$value" @input="$triggerEvent('on$value', this.value)"></textarea>
@@ -370,6 +371,57 @@ let viorIns = new Vior({
 }).mount(document.getElementById('app'))
 ```
 [▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-dynamicvar-ue6g8w)
+
+# 实例引用
+```html
+<div id="app">
+    <!-- 通过 $ref 指令实现实例（DOM对象或Vior实例对象）引用。如下，响应性变量 ref_h1 的值将被赋为 <h1></...> 的DOM对象 -->
+    <h1 $ref="ref_h1">我就是一个标题~</h1>
+    <h2 $ref="ref_h2">我是副标题~</h2>
+    <!-- 在自定义组件上使用 $ref 指令，则会取得其Vior组件实例对象。 -->
+    <!-- 通过传入初始值为数组类型的响应性变量，启用叠加模式（见JS部分）。如下，refs_custom 的值将为多个Vior组件实例组成的数组。 -->
+    <custom-component $for="(k, v) in arr" $ref="refs_custom">{{ v }}</custom-component>
+    <br/>
+    <button @click="arr.push(arr.length + 1)">变一变</button>
+</div>
+```
+```javascript
+import Vior from 'https://unpkg.com/vior'
+
+let CustomComponent = {
+    html: `
+        序号：<slot-receiver></slot-receiver>
+        <br/>
+    `
+}
+
+let viorIns = new Vior({
+    vars() {
+        return {
+            ref_h1: null,
+            ref_h2: null,
+            // 响应性变量 refs_custom 将启用叠加模式
+            refs_custom: [],
+            arr: [1, 2, 3]
+        }
+    },
+    watchers: {
+        ref_h1() {
+            console.log('ref_h1', this.vars.ref_h1)
+        },
+        ref_h2() {
+            console.log('ref_h2', this.vars.ref_h2)
+        },
+        refs_custom() {
+            console.log('refs_custom', this.vars.refs_custom)
+        }
+    },
+    comps: {
+        'custom-component': CustomComponent
+    }
+}).mount(document.getElementById('app'))
+```
+[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-instancereferences-2sot8c)
 
 # 内置元素
 - `<template></...>`: 空元素，效果是只显示其插槽（子元素）内容。

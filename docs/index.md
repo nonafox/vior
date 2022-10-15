@@ -371,6 +371,57 @@ let viorIns = new Vior({
 ```
 [▶ Run in codesandbox](https://codesandbox.io/s/vior-dynamicvar-ue6g8w)
 
+# Instance References
+```html
+<div id="app">
+    <!-- use `$ref` command to achieve instance references. like this, the reactive variable `ref_h1` will be assigned as the DOM object <h1></h1...> -->
+    <h1 $ref="ref_h1">I'm H1~</h1>
+    <h2 $ref="ref_h2">I'm H2~</h2>
+    <!-- use `$ref` command on custom components, and you can get the Vior instances of the components -->
+    <!-- you can also set the reactive variable's default value to an array, like this, then `refs_custom` will be a array with multiple instances (i.e. multiple mode) -->
+    <custom-component $for="(k, v) in arr" $ref="refs_custom">{{ v }}</custom-component>
+    <br/>
+    <button @click="arr.push(arr.length + 1)">Change</button>
+</div>
+```
+```javascript
+import Vior from 'https://unpkg.com/vior'
+
+let CustomComponent = {
+    html: `
+        Index: <slot-receiver></slot-receiver>
+        <br/>
+    `
+}
+
+let viorIns = new Vior({
+    vars() {
+        return {
+            ref_h1: null,
+            ref_h2: null,
+            // the reactive variable `refs_custom` will trigger multiple mode
+            refs_custom: [],
+            arr: [1, 2, 3]
+        }
+    },
+    watchers: {
+        ref_h1() {
+            console.log('ref_h1', this.vars.ref_h1)
+        },
+        ref_h2() {
+            console.log('ref_h2', this.vars.ref_h2)
+        },
+        refs_custom() {
+            console.log('refs_custom', this.vars.refs_custom)
+        }
+    },
+    comps: {
+        'custom-component': CustomComponent
+    }
+}).mount(document.getElementById('app'))
+```
+[▶ Run in codesandbox](https://codesandbox.io/s/vior-instancereferences-2sot8c)
+
 # Inner Elements
 - `<template></...>`: void element. it'll only show its children.
 - `<slot-provider name="slotName"></...>`: slot provider, be used with `<slot-receiver></...>` to pass the slots to components.

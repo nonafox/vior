@@ -28,7 +28,7 @@ export default {
             return true
         if (obj.toString() == '[object Object]') {
             return Object.getPrototypeOf(obj).constructor.toString()
-                === Object.getPrototypeOf({}).constructor.toString()
+                == Object.getPrototypeOf({}).constructor.toString()
         } else {
             return false
         }

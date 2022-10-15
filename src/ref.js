@@ -3,7 +3,7 @@ import Dep from './dep.js'
 
 export default class Ref {
     static createRef(_this, _obj, _deps = null, depTag = null) {
-        let obj = _obj && typeof _obj == 'object' ? Util.deepCopy(_obj) : _obj,
+        let obj = _obj && Util.isPlainObject(_obj) ? Util.deepCopy(_obj) : _obj,
             nobj = Array.isArray(obj) ? [] : {},
             deps = _deps || new Dep(_this)
         
@@ -54,7 +54,7 @@ export default class Ref {
                 return key in target.__rawValue
             },
             set(target, key, value) {
-                let changed = value != target.__rawValue[key]
+                let changed = value !== target.__rawValue[key]
                 target.__rawValue[key] = value
                 target.__realValue[key] = Ref.createRef(_this, value, deps, depTag)
                 if (changed)
@@ -69,7 +69,7 @@ export default class Ref {
         })
     }
     static isRef(obj) {
-        return typeof obj.__getRaw == 'function' && obj.__getRaw('__isViorRef')
+        return obj && typeof obj.__getRaw == 'function' && obj.__getRaw('__isViorRef')
     }
     static isArrayRef(obj) {
         return this.isRef(obj) && obj.__getRaw('__isArray')

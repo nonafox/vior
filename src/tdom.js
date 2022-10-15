@@ -56,7 +56,8 @@ export default class TDom {
                 type: 'common',
                 attrs: {},
                 ctx: {},
-                setup: null,
+                setups: [],
+                unsetups: [],
                 data: {},
                 text: null,
                 children: []

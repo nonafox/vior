@@ -51,7 +51,7 @@ export default class Renderer {
                     $children = $this.$children
                 let __syncVars = () => {
                         try { ${varsSyncSetup} } catch (ex) {
-                            $util.triggerError('Runtime error', \`${key}\`, null, '(inner error) sync vars error')
+                            $util.triggerError('Runtime error', \`${key}\`, null, '(inner error) sync reactive variables error.')
                         }
                     },
                     $triggerEvent = (evtName, ...__args) => {
@@ -251,6 +251,32 @@ export default class Renderer {
                     this.pushEvtFunction(vnode.data, 'on$value', this.runInContext(vnode, oriKey, code, true))
                     return true
                 }
+            } else if (key == 'ref') {
+                let value = this.runInContext(vnode, oriKey, val),
+                    multiple = value && (Array.isArray(value) || Ref.isArrayRef(value))
+                let code = `
+                    if (! ${multiple})
+                        ${val} = this
+                    else if (${val}.indexOf(this) < 0)
+                        ${val}.push(this)
+                `
+                this.pushEvtFunction(vnode.data, 'on$setup', this.runInContext(vnode, oriKey, code, true))
+                code = `
+                    if (! ${multiple})
+                        ${val} = null
+                    else if (${val}.indexOf(this) >= 0)
+                        ${val}.splice(${val}.indexOf(this), 1)
+                `
+                this.pushEvtFunction(vnode.data, 'on$unsetup', this.runInContext(vnode, oriKey, code, true))
+                
+                vnode.setups.push(function (node, dom) {
+                    dom.on$setup()
+                })
+                vnode.unsetups.push(function (node, dom) {
+                    dom.on$unsetup()
+                })
+                vnode.data.__special_attr__ref_origin = this.viorInstance
+                vnode.data.__special_attr__ref_code = val
             }
         } catch (ex) {
             Util.triggerError('Render error', oriKey, val, ex)
@@ -264,12 +290,6 @@ export default class Renderer {
                     newKey = Util.camel2KebabCase(data.key.substr(1)), newVal
                 switch (prefix) {
                     case ':':
-                        if (key.substr(0, 2) == '::') {
-                            newKey = Util.kebab2CamelCase(data.key.substr(2))
-                            vnode.data[newKey] = this.runInContext(vnode, key, val)
-                            newKey = newVal = null
-                            break
-                        }
                         newVal = this.runInContext(vnode, key, val)
                         
                         let pushClass = (nval) => {
@@ -368,7 +388,6 @@ export default class Renderer {
             for (let kk2 in handledEvtFuncs) {
                 let k2 = handledEvtFuncs[kk2],
                     v2 = v.data[k2]
-                delete v.data[k2]
                 if ((compIns.opts.events || []).indexOf(k2) < 0)
                     continue
                 
@@ -397,15 +416,47 @@ export default class Renderer {
             let res = compIns.renderAsComponent(v)
             res.reverse()
             tree.splice(k, 1)
+            
+            let soviet = res[0]
             if (isNewIns) {
-                res[0].setup = function () {
-                    try {
-                        this.ctx.__viorInstance.triggerHook('mounted', true)
-                    } catch (ex) {
-                        this.ctx.triggerError('Runtime error', '(hook) mounted', null, ex)
-                    }
+                if (v.data.__special_attr__ref_origin) {
+                    let targetSetup = `__ctx.originIns.vars.${v.data.__special_attr__ref_code}`
+                    this.runInEvalContext(`
+                        (function () {
+                            if ((Array.isArray(${targetSetup}) || __ctx.Ref.isArrayRef(${targetSetup}))
+                                && ${targetSetup}.indexOf(__ctx.thisIns) < 0) {
+                                ${targetSetup}.push(__ctx.thisIns)
+                            } else {
+                                ${targetSetup} = __ctx.thisIns
+                            }
+                        })()
+                    `, { originIns: v.data.__special_attr__ref_origin, thisIns: compIns, Util: Util, Ref: Ref })
+                    
+                    if (! compIns.hooks.uncreated)
+                        compIns.hooks.uncreated = []
+                    let runInEvalContext = this.runInEvalContext
+                    compIns.hooks.uncreated.push(function () {
+                        runInEvalContext(`
+                            (function () {
+                                if ((Array.isArray(${targetSetup}) || __ctx.Ref.isArrayRef(${targetSetup}))
+                                    && ${targetSetup}.indexOf(__ctx.thisIns) >= 0) {
+                                    ${targetSetup}.splice(${targetSetup}.indexOf(__ctx.thisIns), 1)
+                                } else {
+                                    ${targetSetup} = null
+                                }
+                            })()
+                        `, { originIns: v.data.__special_attr__ref_origin, thisIns: this, Util: Util, Ref: Ref })
+                    })
                 }
+                soviet.setups.push(function () {
+                    try {
+                        soviet.ctx.__viorInstance.triggerHook('mounted', true)
+                    } catch (ex) {
+                        soviet.ctx.__util.triggerError('Runtime error', '(hook) mounted', null, ex)
+                    }
+                })
             }
+            
             for (let k2 in res)
                 tree.splice(k, 0, res[k2])
             k += res.length - 1

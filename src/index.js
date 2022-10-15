@@ -28,16 +28,28 @@ export default class Vior {
         this.handleDynamicRefs()
         this.handleWatchers()
         this.handleComponents()
+        this.handleHooks()
         
         this.triggerHook('created')
     }
-    triggerHook(name, bubbleDown = false) {
-        if (this.opts.hooks && this.opts.hooks[name]) {
-            try {
-                this.opts.hooks[name].call(this)
-            } catch (ex) {
-                Util.triggerError('Runtime error', '(hook) ' + name, '', ex)
+    handleHooks() {
+        this.hooks = {}
+        if (this.opts.hooks) {
+            for (let k in this.opts.hooks) {
+                let v = this.opts.hooks[k]
+                this.hooks[k] = [v]
             }
+        }
+    }
+    triggerHook(name, bubbleDown = false) {
+        try {
+            for (let k in this.hooks[name]) {
+                let v = this.hooks[name][k]
+                if (typeof v == 'function')
+                    v.call(this)
+            }
+        } catch (ex) {
+            Util.triggerError('Runtime error', '(hook) ' + name, '', ex)
         }
         if (bubbleDown && this.$children && this.$children.length) {
             for (let k in this.$children) {
@@ -98,9 +110,36 @@ export default class Vior {
         this.triggerHook('mounted')
         return this
     }
+    handleSetupFunctions(tree) {
+        for (let k in tree) {
+            let v = tree[k]
+            if (! v.deleted_dom) {
+                for (let k2 in v.setups) {
+                    let v2 = v.setups[k2]
+                    if (typeof v2 == 'function')
+                        v2(v, v.dom)
+                }
+            } else {
+                for (let k2 in v.unsetups) {
+                    let v2 = v.unsetups[k2]
+                    if (typeof v2 == 'function') {
+                        v2(v, v.deleted_dom)
+                        delete v.deleted_dom
+                    }
+                }
+            }
+            if (v.children && v.children.length)
+                this.handleSetupFunctions(v.children)
+        }
+    }
     update() {
         if (! this.mounted || this.isComponent)
             return
+        if (this.updating) {
+            this.debts = (this.debts || 0) + 1
+            return
+        }
+        this.updating = true
         
         let vdom = this.vdom,
             renderer = this.renderer
@@ -108,6 +147,15 @@ export default class Vior {
             newVTree = renderer.render(this.originVTree)
         vdom.patch(oldVTree, newVTree)
         this.currentVTree = newVTree
+        
+        this.handleSetupFunctions(oldVTree.children)
+        this.handleSetupFunctions(newVTree.children)
+        
+        this.updating = false
+        if (this.debts) {
+            this.debts --
+            this.update()
+        }
     }
     renderAsComponent(vnode) {
         if (! this.isComponent)

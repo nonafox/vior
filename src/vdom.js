@@ -34,8 +34,6 @@ export default class VDom {
             return false
         if (vnode1.tag == 'input' && vnode1.attrs.type != vnode2.attrs.type)
             return false
-        if (vnode1.attrs.key != vnode2.attrs.key)
-            return false
         
         return true
     }
@@ -144,14 +142,23 @@ export default class VDom {
                 this.newNode(dom, [], [], nnode.children, v)
             }
         }
-        
-        if (typeof nnode.setup == 'function')
-            nnode.setup()
     }
     removeNode(pdom, ldl, onode) {
-        pdom.removeChild(onode.dom)
-        ldl.splice(ldl.indexOf(onode.dom), 1)
+        let dom = onode.dom
+        pdom.removeChild(dom)
+        ldl.splice(ldl.indexOf(dom), 1)
         onode.dom = null
+        onode.deleted_dom = dom
+        
+        let setDomsNull = (node) => {
+            node.deleted_dom = node.dom
+            node.dom = null
+            if (node.children) {
+                for (let k in node.children)
+                    setDomsNull(node.children[k])
+            }
+        }
+        setDomsNull(onode)
     }
     patchDoit(pdom, ldl, otree, onode, ntree, nnode) {
         if (! this.isSameNode(onode, nnode))
@@ -161,9 +168,6 @@ export default class VDom {
         
         this.patchSameNode(pdom, ldl, otree, onode, ntree, nnode)
         onode.patched = true
-        
-        if (typeof nnode.setup == 'function')
-            nnode.setup()
         
         return true
     }
