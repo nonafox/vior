@@ -1,8 +1,9 @@
 export default {
     selfClosingTags: ['br', 'hr', 'area', 'base', 'img', 'input', 'link', 'meta', 'basefont',
-                      'param', 'col', 'frame', 'embed', 'keygen', 'source'],
+                      'param', 'col', 'frame', 'embed', 'keygen', 'source', '!doctype'],
     inputTags: ['input', 'textarea', 'select'],
     voidTags: ['template', 'slot-receiver'],
+    textOnlyTags: ['option', 'script'],
     
     triggerError(desc, name, code, ex) {
         console.group('[Vior error]:')

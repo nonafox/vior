@@ -2,7 +2,7 @@ import Util from './util.js'
 
 export default class TDom {
     isValidName(text) {
-        return /^[a-zA-Z0-9\-_\$\@\:]+$/.test(text)
+        return /^[!a-zA-Z0-9\-_\$\@\:]+$/.test(text)
     }
     isQuote(arr, char) {
         return arr[arr.indexOf(char) - 1] != '\\' && (char == `'` || char == `"`)
@@ -65,8 +65,9 @@ export default class TDom {
             res = Util.deepCopy(VNodeTemplate, { type: 'root' }),
             currentPath = [-1], currentVNode = {}, openedPaths = [], status = 'common',
             quoteStarter = null, quoteText = '', quoteAvailable = false, tagStatus = false,
-            isEndTag = false, isSelfClosingTag = false, currentTag = '', currentAttrsRaw = '',
-            currentAttrs = {}, isTagRead = false, isComment = false, commentText = ''
+            isEndTag = false, isSelfClosingTag = false, isTextOnly = false, currentTag = '',
+            currentAttrsRaw = '', currentAttrs = {}, isTagRead = false, isComment = false,
+            commentText = ''
         
         for (let k = 0; k < arr.length; k ++) {
             let v = arr[k]
@@ -78,11 +79,13 @@ export default class TDom {
                             currentTag += v
                         } else if (! isTagRead && ! this.isValidName(v) && currentTag) {
                             isTagRead = true
+                            currentTag = currentTag.toLowerCase()
                             currentVNode.tag = currentTag
                             if (Util.voidTags.indexOf(currentTag) >= 0)
                                 currentVNode.type = 'void'
                             
                             isSelfClosingTag = Util.selfClosingTags.indexOf(currentTag) >= 0
+                            isTextOnly = Util.textOnlyTags.indexOf(currentTag) >= 0
                             if (isSelfClosingTag)
                                 openedPaths.splice(openedPaths.indexOf(currentPath), 1)
                         } else if (isTagRead && (this.isValidName(v) || this.isQuote(arr, v))) {
@@ -108,8 +111,11 @@ export default class TDom {
                             quoteAvailable = false
                         }
                     }
-                    if (v == '<') {
-                        if (src.substr(k, `<!--`.length) == `<!--`) {
+                    let path = openedPaths[openedPaths.length - 1],
+                        tag = this.readPath(res, path).tag || '',
+                        isValidEndTag = tag + '>' == src.substr(k + 2, tag.length + 1)
+                    if ((! isTextOnly && v == '<') || (isTextOnly && isValidEndTag)) {
+                        if (! isTextOnly && src.substr(k, `<!--`.length) == `<!--`) {
                             isComment = true
                             commentText = ''
                             k += `<!--`.length - 1
@@ -119,14 +125,13 @@ export default class TDom {
                         if (arr[k + 1] == '/') {
                             tagStatus = true
                             isEndTag = true
-                            let path = openedPaths[openedPaths.length - 1]
-                            let tag = this.readPath(res, path).tag
-                            if (tag + '>' == src.substr(k + 2, tag.length + 1))
+                            if (isValidEndTag)
                                 openedPaths.splice(-1, 1)
                             else
                                 return `Find unexpected ending tag.`
                             currentPath = path
                             currentVNode = this.readPath(res, path)
+                            isTextOnly = false
                         } else {
                             tagStatus = true
                             currentTag = currentAttrsRaw = ''
@@ -137,7 +142,7 @@ export default class TDom {
                             openedPaths.push(currentPath)
                             this.pushPath(res, currentPath, currentVNode)
                         }
-                    } else if (v == '>') {
+                    } else if ((tagStatus || isEndTag) && v == '>') {
                         if (! isEndTag && Util.realLength(currentAttrs))
                             currentVNode.attrs = currentAttrs
                         
@@ -181,9 +186,9 @@ export default class TDom {
         
         return res
     }
-    patch(tree) {
+    patch(tree, plainMode = false) {
         if (! Array.isArray(tree))
-            return this.patch(tree.children)
+            return this.patch(tree.children, plainMode)
         
         let res = ''
         for (let k in tree) {
@@ -191,17 +196,23 @@ export default class TDom {
                 singleTag = Util.selfClosingTags.indexOf(v.tag) >= 0
             
             if (v.tag) {
-                let children = v.children.length ? this.patch(v.children) : '',
+                let children = v.children.length ? this.patch(v.children, Util.textOnlyTags.indexOf(v.tag) >= 0) : '',
                     attrs = ''
                 for (let k2 in v.attrs) {
                     let v2 = v.attrs[k2] + ''
                     v2 = v2.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
-                    attrs += ` ${k2}="${v2}"`
+                    if (v2 !== '')
+                        attrs += ` ${k2}="${v2}"`
+                    else
+                        attrs += ` ${k2}`
                 }
-                res += `<${v.tag}${attrs}${singleTag ? '/' : ''}>${children}${singleTag ? '' : `</${v.tag}>`}`
+                let slash = singleTag && v.tag != '!doctype' ? '/' : ''
+                res += `<${v.tag}${attrs}${slash}>${children}${singleTag ? '' : `</${v.tag}>`}`
             } else if (v.type == 'text') {
-                res += v.text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/(\s|&nbsp;)+/g, ' ')
-                             .replace(/'/g, '&#39;').replace(/"/g, '&quot;')
+                if (plainMode)
+                    res += v.text
+                else
+                    res += v.text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/(\s|&nbsp;)+/g, ' ')
             } else if (v.type == 'comment') {
                 res += `<!--${v.text}-->`
             }
