@@ -25,7 +25,7 @@ How did I choose this name? Just like Evan You, using the translator!
 	- best render speed
 	- autonomous HTML parsing engine
 - ✅ Components support
-- ⬛ CLI for Node.js (like Vue's CLI)
+- ✅ CLI for Node.js - [Vior-CLI](https://github.com/jwhgzs/vior-cli)
 - ⬛ Server-Side Render (SSR)
 
 # URLs

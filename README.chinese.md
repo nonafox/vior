@@ -25,7 +25,7 @@ Vior这名儿怎么来的？和[@尤大](https://github.com/yyx990803)一样，�
 	- 极致渲染速度
 	- 自主HTML解析引擎
 - ✅ 组件支持
-- ⬛ Vior自己的CLI（就像Vue CLI）
+- ✅ Vior自己的CLI——[Vior-CLI](https://github.com/jwhgzs/vior-cli)
 - ⬛ 服务端渲染（SSR）
 
 # 相关链接
