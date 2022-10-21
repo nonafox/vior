@@ -212,7 +212,7 @@ export default class TDom {
                 if (plainMode)
                     res += v.text
                 else
-                    res += v.text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/(\s|&nbsp;)+/g, ' ')
+                    res += v.text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/( |&nbsp;)+/g, ' ')
             } else if (v.type == 'comment') {
                 res += `<!--${v.text}-->`
             }
