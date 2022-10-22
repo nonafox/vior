@@ -43,18 +43,15 @@ export default {
         console.groupEnd()
         throw new Error('[Vior error]')
     },
-    plainObjectConstructor: Object.getPrototypeOf({}).constructor.toString(),
     isPlainObject(obj) {
         if (! obj)
             return
         if (Array.isArray(obj))
             return true
-        if (obj.toString() == '[object Object]') {
-            return Object.getPrototypeOf(obj).constructor.toString()
-                == this.plainObjectConstructor
-        } else {
+        if (typeof obj == 'object')
+            return Object.getPrototypeOf(obj).constructor.toString() == 'function Object() { [native code] }'
+        else
             return false
-        }
     },
     deepCopy(...arrs) {
         let res = Array.isArray(arrs[0]) ? [] : {},
