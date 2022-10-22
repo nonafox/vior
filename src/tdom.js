@@ -50,18 +50,7 @@ export default class TDom {
     }
     read(src) {
         let arr = src.split('')
-        let VNodeTemplate = {
-                dom: null,
-                tag: null,
-                type: 'common',
-                attrs: {},
-                ctx: {},
-                setups: [],
-                unsetups: [],
-                data: {},
-                text: null,
-                children: []
-            },
+        let VNodeTemplate = Util.VNodeTemplate,
             res = Util.deepCopy(VNodeTemplate, { type: 'root' }),
             currentPath = [-1], currentVNode = {}, openedPaths = [], status = 'common',
             quoteStarter = null, quoteText = '', quoteAvailable = false, tagStatus = false,

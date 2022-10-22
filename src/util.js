@@ -4,6 +4,18 @@ export default {
     inputTags: ['input', 'textarea', 'select'],
     voidTags: ['template', 'slot-receiver'],
     textOnlyTags: ['script', 'style'],
+    VNodeTemplate: {
+        dom: null,
+        tag: null,
+        type: 'common',
+        attrs: {},
+        ctx: {},
+        setups: [],
+        unsetups: [],
+        data: {},
+        text: null,
+        children: []
+    },
     
     randomText(len = 6) {
         let sets = 'abcdefghijklmnopqrstuvwxyz0123456789',
@@ -63,7 +75,7 @@ export default {
         }
         for (let k = 0; k < merges.length; k ++) {
             let v = merges[k]
-            for (let k2 in v) {
+            for (let k2 = 0; k2 < v.length; k2 ++) {
                 let v2 = v[k2]
                 res[k2] = v2
             }
