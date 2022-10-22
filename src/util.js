@@ -49,7 +49,7 @@ export default {
         if (Array.isArray(obj))
             return true
         if (typeof obj == 'object')
-            return Object.getPrototypeOf(obj).constructor.toString() == 'function Object() { [native code] }'
+            return obj.constructor === Object
         else
             return false
     },
