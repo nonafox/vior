@@ -3,8 +3,17 @@ export default {
                       'param', 'col', 'frame', 'embed', 'keygen', 'source', '!doctype'],
     inputTags: ['input', 'textarea', 'select'],
     voidTags: ['template', 'slot-receiver'],
-    textOnlyTags: ['option', 'script'],
+    textOnlyTags: ['script', 'style'],
     
+    randomText(len = 6) {
+        let sets = 'abcdefghijklmnopqrstuvwxyz0123456789',
+            res = ''
+        for (let k = 0; k < len; k ++) {
+            let c = sets[Math.floor(Math.random() * (sets.length - 1))]
+            res += c
+        }
+        return res
+    },
     triggerError(desc, name, code, ex) {
         console.group('[Vior error]:')
         console.group('Type:')
@@ -125,5 +134,42 @@ export default {
             res += this.firstCharUpper(v)
         }
         return res
+    },
+    isScriptQuote(text, k) {
+        return (text[k] == `'` || text[k] == `"` || text[k] == '`') && text[k - 1] != '\\'
+    },
+    scriptReplace(_script, regexp, replace) {
+        let script = _script.split(''), quoteStarter = null, addup = ''
+        
+        let reps = [], repsid = -1
+        for (let k in script) {
+            k = parseInt(k)
+            let v = script[k]
+            if (! quoteStarter) {
+                if (! this.isScriptQuote(script, k)) {
+                    addup += v
+                } else {
+                    quoteStarter = v
+                    repsid += 1
+                    reps[repsid] = ''
+                    addup += quoteStarter + '[[[#{{{' + repsid + '}}}#]]]'
+                }
+            } else {
+                if (this.isScriptQuote(script, k) && v == quoteStarter) {
+                    addup += v
+                    quoteStarter = null
+                } else {
+                    reps[repsid] += v
+                }
+            }
+        }
+        
+        addup = addup.replace(regexp, replace)
+        for (let k in reps) {
+            let v = reps
+            addup = addup.replace('[[[#{{{' + k + '}}}#]]]', v)
+        }
+        
+        return addup
     }
 }

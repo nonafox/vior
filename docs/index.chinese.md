@@ -8,10 +8,8 @@
 <div id="app">
     <!-- 按钮上三个属性分别是DOM事件、DOM attribute、DOM property。具体形式为：
          DOM事件:        @eventName="code" // eventName不需要有'on'前缀
-         DOM attribute:  :attributeName="code"
-         DOM property:   ::propertyName="code" -->
-    <!-- 这里名为customValue的DOM property可通过 document.getElementById('test').customValue 取得 -->
-    <button id="test" @click="count ++" :disabled="count >= 10" ::custom-value="{ countVal: count }">+</button>
+         DOM attribute:  :attributeName="code" -->
+    <button id="test" @click="count ++" :disabled="count >= 10">+</button>
     <br/>
     <!-- 用于显示变量值的DOM模板，形如 {{ xxx }} -->
     计数: {{ count }}
@@ -30,7 +28,7 @@ let viorIns = new Vior({
     }
 }).mount(document.getElementById('app'))
 ```
-[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-basicreactive-cfnleh)
+[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-reactionbasic-cfnleh)
 
 # 类 / 样式处理
 ```html
@@ -98,6 +96,7 @@ let viorIns = new Vior({
              $is="code"                   控制元素的标签名，支持camelCase和html-case
              $value="code"                实现表单双向绑定的指令。参见后面部分文档
              $ref="code"                  实现实例引用的指令。参见后面部分文档
+             $ownstyle                    标记组件中的style标签使用私有模式。参见后面部分文档
              -->
         <li $for="(key, value) in arr">
             <span $if="key % 2 === 0">Id: {{ value }}</span>
@@ -146,6 +145,12 @@ import Vior from 'https://unpkg.com/vior'
 let CustomLiComponent = {
     html: `
         <li>
+            <!-- 使用 $ownstyle 指令启用私有style模式。下面设置的样式只在本组件有效。 -->
+            <style $ownstyle>
+                * {
+                    color: blue
+                }
+            </style>
             <span $if="key % 2 === 0">Id: {{ value }}</span>
             <span $else @click="$triggerEvent('onclicknotice', '哎哟你点我干嘛~~哎哟~')">
                 <!-- 通过 <slot-receiver name="slotName"></...> 接收并放置父组件传下来的插槽 -->

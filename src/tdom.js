@@ -113,7 +113,7 @@ export default class TDom {
                     }
                     let path = openedPaths[openedPaths.length - 1],
                         tag = this.readPath(res, path).tag || '',
-                        isValidEndTag = tag + '>' == src.substr(k + 2, tag.length + 1)
+                        isValidEndTag = '</' + tag == src.substr(k, tag.length + 2)
                     if ((! isTextOnly && v == '<') || (isTextOnly && isValidEndTag)) {
                         if (! isTextOnly && src.substr(k, `<!--`.length) == `<!--`) {
                             isComment = true

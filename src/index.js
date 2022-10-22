@@ -6,13 +6,13 @@ import Ref from './ref.js'
 
 export default class Vior {
     constructor(opts) {
-        this.uniqueId = 'ViorInstance_' + Math.floor(Math.random() * 1e8)
+        this.uniqueId = 'vior_' + Util.randomText()
         this.vdom = new VDom()
         this.renderer = new Renderer(this)
         
         if (opts.html) {
             this.html = opts.html
-            this.originVTree = this.vdom.readFromText(opts.html)
+            this.originVNode = this.vdom.readFromText(opts.html)
             if (opts.events) {
                 for (let k in opts.events) {
                     let v = opts.events[k]
@@ -101,8 +101,8 @@ export default class Vior {
             return
         
         this.mounted = elm
-        this.originVTree = this.vdom.read(elm)
-        this.currentVTree = Util.deepCopy(this.originVTree)
+        this.originVNode = this.vdom.read(elm)
+        this.currentVNode = Util.deepCopy(this.originVNode)
         Dep.createDepContext(this, function () {
             this.update()
         })
@@ -143,13 +143,13 @@ export default class Vior {
         
         let vdom = this.vdom,
             renderer = this.renderer
-        let oldVTree = this.currentVTree,
-            newVTree = renderer.render(this.originVTree)
-        vdom.patch(oldVTree, newVTree)
-        this.currentVTree = newVTree
+        let oldVNode = this.currentVNode,
+            newVNode = renderer.render(this.originVNode)
+        vdom.patch(oldVNode, newVNode)
+        this.currentVNode = newVNode
         
-        this.handleSetupFunctions(oldVTree.children)
-        this.handleSetupFunctions(newVTree.children)
+        this.handleSetupFunctions(oldVNode.children)
+        this.handleSetupFunctions(newVNode.children)
         
         this.updating = false
         if (this.debts) {
@@ -167,12 +167,12 @@ export default class Vior {
                 this.vars.__setRaw(k, v)
         }
         
-        return this.renderer.render(this.originVTree, {}, true, [], vnode.slots).children
+        return this.renderer.render(this.originVNode, {}, true, [], vnode.slots).children
     }
     unmount() {
         this.mounted = null
-        this.originVTree = null
-        this.currentVTree = null
+        this.originVNode = null
+        this.currentVNode = null
         
         this.triggerHook('unmounted', true)
         return this

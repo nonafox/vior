@@ -8,12 +8,10 @@ Now I'm absorbed in updating and improving, so I had little time to finish the d
 <div id="app">
     <!-- These two attributes are DOM event, DOM attribute and DOM property. Details:
          DOM event:        @eventName="code" // `eventName` doen't need an 'on' prefix
-         DOM attribute:    :attributeName="code"
-         DOM property:     ::propertyName="code" -->
-    <!-- you can get the DOM property by `document.getElementById('test').customValue` -->
-    <button id="test" @click="count ++" :disabled="count >= 10" ::custom-alue="{ countVal: count }">+</button>
+         DOM attribute:    :attributeName="code" -->
+    <button id="test" @click="count ++" :disabled="count >= 10">+</button>
     <br/>
-    <!-- DOM templates that used to display the values of reactive variables. They seems like {{ xxx }} -->
+    <!-- DOM templates that used to display the values of reactive variables. They seem like {{ xxx }} -->
     Count: {{ count }}
 </div>
 ```
@@ -30,7 +28,7 @@ let viorIns = new Vior({
     }
 }).mount(document.getElementById('app'))
 ```
-[▶ Run in codesandbox](https://codesandbox.io/s/vior-basicreactive-cfnleh)
+[▶ Run in codesandbox](https://codesandbox.io/s/vior-reactionbasic-cfnleh)
 
 # Class / Style Handling
 ```html
@@ -98,6 +96,8 @@ let viorIns = new Vior({
              $html="code"                   control element's property innerHTML without Vior's XSS protecting. don't use `::innerHTML` instead of this!!!
              $is="code"                     switch the tag of the element. supports camelCase and html-case
              $value="code"                  the way to achieve two-way binding on form elements or custom components, see below
+             $ref="code"                    the way to achieve instance references, see below
+             $ownstyle                      the way to enable private mode for <style></...> elements, see below
              -->
         <li $for="(key, value) in arr">
             <span $if="key % 2 === 0">Id: {{ value }}</span>
@@ -146,6 +146,12 @@ import Vior from 'https://unpkg.com/vior'
 let CustomLiComponent = {
     html: `
         <li>
+            <!-- use '$ownstyle' command to enable private mode for styles. here the styles will be only available in current component. -->
+            <style $ownstyle>
+                * {
+                    color: blue
+                }
+            </style>
             <span $if="key % 2 === 0">Id: {{ value }}</span>
             <span $else @click="$triggerEvent('onclicknotice', 'Why did you click me~')">
                 <!-- receive and place the slots from father using <slot-receiver name="slotName"></...> -->

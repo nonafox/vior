@@ -29,6 +29,11 @@
             let todoItemComponent = {
                 html: `
                     <li>
+                        <style $ownstyle>
+                            strong:hover {
+                                color: blue
+                            }
+                        </style>
                         <span>{{ key + 1 }}: {{ value }}</span>
                         <strong $is="(key + 1) % 3 === 0 ? 'i' : 'strong'">
                             <slot-receiver name="desc"></slot-receiver>

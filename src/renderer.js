@@ -278,6 +278,15 @@ export default class Renderer {
                 })
                 vnode.data.__special_attr__ref_origin = this.viorInstance
                 vnode.data.__special_attr__ref_code = val
+            } else if (key == 'ownstyle') {
+                if (vnode.tag != 'style') {
+                    Util.triggerError('Render error', oriKey, val,
+                        '(inner error) you can only use command `$private` on <style><...> elements.')
+                    return
+                }
+                let inner = vnode.children[0],
+                    regexp = /([a-zA-Z0-9\-_#\*\.]+)\s*{/
+                inner.text = Util.scriptReplace(inner.text, regexp, `$1[${this.viorInstance.uniqueId}] {`)
             }
         } catch (ex) {
             Util.triggerError('Render error', oriKey, val, ex)
@@ -507,6 +516,8 @@ export default class Renderer {
             }
             if (deleted)
                 continue
+            if (v.tag)
+                v.attrs[this.viorInstance.uniqueId] = ''
             let handledEvtFuncs = this.handleEvtFunctions(v)
             
             if (v.tag == 'option' && v.ctx.__father_select__value !== undefined) {
