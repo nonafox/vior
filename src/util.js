@@ -9,7 +9,7 @@ export default {
         let sets = 'abcdefghijklmnopqrstuvwxyz0123456789',
             res = ''
         for (let k = 0; k < len; k ++) {
-            let c = sets[Math.floor(Math.random() * (sets.length - 1))]
+            let c = sets[Math.floor(Math.random() * sets.length)]
             res += c
         }
         return res
