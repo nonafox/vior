@@ -443,6 +443,7 @@ let viorIns = new Vior({
 - `$parent`: father's Vior instance. When in root component, it'll be `null`.
 - `$children`: children's Vior instances' array.
 - `$triggerEvent(eventName, ...args)`: the way to trigger component events. `...args` can be used by `$args` in component events' context.
+**Notice! In JS part, you must use the variables above with the help of Vior's instance, like this: `this.$parent`**
 
 ### JS part
 - `this`: Current Vior instance.
