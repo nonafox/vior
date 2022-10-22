@@ -1,5 +1,6 @@
 # Vior
-A mini copy of Vue made on my own.  
+A mini copy of Vue made on my own. Warning! Don't use Vior in product environments before the offical version of Vior: v1.0.0
+
 How did I choose this name? Just like Evan You, using the translator!
 
 # Languages
@@ -22,10 +23,11 @@ How did I choose this name? Just like Evan You, using the translator!
 	- commands
 	- special handling for form components
 - ✅ Virtual DOM
-	- best render speed
+	- best patching speed
 	- autonomous HTML parsing engine
 - ✅ Components support
 - ✅ CLI for Node.js - [Vior-CLI](https://github.com/jwhgzs/vior-cli)
+- ⬛ Speed improve for virtual tree generating
 - ⬛ Server-Side Render (SSR)
 
 # URLs
