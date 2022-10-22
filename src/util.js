@@ -75,8 +75,10 @@ export default {
         }
         for (let k = 0; k < merges.length; k ++) {
             let v = merges[k]
-            for (let k2 = 0; k2 < v.length; k2 ++) {
-                let v2 = v[k2]
+            let kks = Object.keys(v)
+            for (let kk2 = 0; kk2 < kks.length; kk2 ++) {
+                let k2 = kks[kk2],
+                    v2 = v[k2]
                 res[k2] = v2
             }
         }
