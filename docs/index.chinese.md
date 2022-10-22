@@ -443,6 +443,7 @@ let viorIns = new Vior({
 - `$parent`: 父组件Vior实例对象。当在根组件调用时则为`null`。
 - `$children`: 子组件Vior实例数组。
 - `$triggerEvent(eventName, ...args)`: 自定义组件触发事件（冒泡）的方法，提供的`...args`参数可在组件事件上下文通过`$args`获取。
+**注意！在JS部分中，以上内置变量需要借助Vior实例获取，例如`this.$parent`。**
 
 ### JS部分
 - `this`: 当前的Vior实例对象。
