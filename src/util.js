@@ -166,7 +166,7 @@ export default {
                     quoteStarter = v
                     repsid += 1
                     reps[repsid] = ''
-                    addup += quoteStarter + '[[[#{{{' + repsid + '}}}#]]]'
+                    addup += quoteStarter + '␣[' + repsid + ']␣'
                 }
             } else {
                 if (this.isScriptQuote(script, k) && v == quoteStarter) {
@@ -181,7 +181,7 @@ export default {
         addup = addup.replace(regexp, replace)
         for (let k in reps) {
             let v = reps
-            addup = addup.replace('[[[#{{{' + k + '}}}#]]]', v)
+            addup = addup.replace('␣[' + k + ']␣', v)
         }
         
         return addup
