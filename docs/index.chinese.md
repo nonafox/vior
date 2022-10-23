@@ -273,7 +273,7 @@ let viorIns = new Vior({
     }
 }).mount(document.getElementById('app'))
 ```
-[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-hooks-dknogm)
+[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-twowaybinding-vu11ix)
 
 # 生命周期钩子
 ```html
@@ -308,7 +308,7 @@ let viorIns = new Vior({
     }
 }).mount(document.getElementById('app'))
 ```
-[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-hook-dknogm)
+[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-hooks-dknogm)
 
 # 监听器
 ```html
