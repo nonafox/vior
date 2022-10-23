@@ -41,6 +41,8 @@ export default {
         console.log(ex || '[unknown]')
         console.groupEnd()
         console.groupEnd()
+        console.log('%c\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t',
+                    'display: block; width: 100%; line-height: 0.25rem; background-color: #ddd;')
         throw new Error('[Vior error]')
     },
     isPlainObject(obj) {

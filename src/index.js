@@ -6,33 +6,37 @@ import Ref from './ref.js'
 
 export default class Vior {
     constructor(opts) {
-        this.uniqueId = 'vior_' + Util.randomText()
-        this.vdom = new VDom()
-        this.renderer = new Renderer(this)
-        
-        this.opts = opts
-        this.handlePlugins()
-        
-        if (opts.html) {
-            this.html = opts.html
-            this.originVNode = this.vdom.readFromText(opts.html)
-            if (opts.events) {
-                for (let k in opts.events) {
-                    let v = opts.events[k]
-                    opts.events[k] = Util.kebab2CamelCase(v).toLowerCase()
+        try {
+            this.uniqueId = 'vior_' + Util.randomText()
+            this.vdom = new VDom()
+            this.renderer = new Renderer(this)
+            
+            this.opts = opts
+            this.handlePlugins()
+            
+            if (opts.html) {
+                this.html = opts.html
+                this.originVNode = this.vdom.readFromText(opts.html)
+                if (opts.events) {
+                    for (let k in opts.events) {
+                        let v = opts.events[k]
+                        opts.events[k] = Util.kebab2CamelCase(v).toLowerCase()
+                    }
                 }
+                this.isComponent = true
             }
-            this.isComponent = true
+            
+            this.handleHooks()
+            this.handleFunctions()
+            this.vars = Ref.createRef(this, opts.vars ? opts.vars() : {})
+            this.handleDynamicRefs()
+            this.handleWatchers()
+            this.handleComponents()
+            
+            this.triggerHook('created')
+        } catch (ex) {
+            Util.triggerError('Initialize error', '(inner) constructor', null, ex)
         }
-        
-        this.handleHooks()
-        this.handleFunctions()
-        this.vars = Ref.createRef(this, opts.vars ? opts.vars() : {})
-        this.handleDynamicRefs()
-        this.handleWatchers()
-        this.handleComponents()
-        
-        this.triggerHook('created')
     }
     handleHooks() {
         this.hooks = {}
@@ -107,18 +111,22 @@ export default class Vior {
         }
     }
     mount(elm) {
-        if (this.isComponent)
-            return
-        
-        this.mounted = elm
-        this.originVNode = this.vdom.read(elm)
-        this.currentVNode = Util.deepCopy(this.originVNode)
-        Dep.createDepContext(this, function () {
-            this.update()
-        })
-        
-        this.triggerHook('mounted')
-        return this
+        try {
+            if (this.isComponent)
+                return
+            
+            this.mounted = elm
+            this.originVNode = this.vdom.read(elm)
+            this.currentVNode = Util.deepCopy(this.originVNode)
+            Dep.createDepContext(this, function () {
+                this.update()
+            })
+            
+            this.triggerHook('mounted')
+            return this
+        } catch (ex) {
+            Util.triggerError('Initialize error', '(inner) mount', null, ex)
+        }
     }
     handleSetupFunctions(tree) {
         for (let k in tree) {
@@ -143,28 +151,32 @@ export default class Vior {
         }
     }
     update() {
-        if (! this.mounted || this.isComponent)
-            return
-        if (this.updating) {
-            this.debts = (this.debts || 0) + 1
-            return
-        }
-        this.updating = true
-        
-        let vdom = this.vdom,
-            renderer = this.renderer
-        let oldVNode = this.currentVNode,
-            newVNode = renderer.render(this.originVNode)
-        vdom.patch(oldVNode, newVNode)
-        this.currentVNode = newVNode
-        
-        this.handleSetupFunctions(oldVNode.children)
-        this.handleSetupFunctions(newVNode.children)
-        
-        this.updating = false
-        if (this.debts) {
-            this.debts --
-            this.update()
+        try {
+            if (! this.mounted || this.isComponent)
+                return
+            if (this.updating) {
+                this.debts = (this.debts || 0) + 1
+                return
+            }
+            this.updating = true
+            
+            let vdom = this.vdom,
+                renderer = this.renderer
+            let oldVNode = this.currentVNode,
+                newVNode = renderer.render(this.originVNode)
+            vdom.patch(oldVNode, newVNode)
+            this.currentVNode = newVNode
+            
+            this.handleSetupFunctions(oldVNode.children)
+            this.handleSetupFunctions(newVNode.children)
+            
+            this.updating = false
+            if (this.debts) {
+                this.debts --
+                this.update()
+            }
+        } catch (ex) {
+            Util.triggerError('Update error', null, null, ex)
         }
     }
     renderAsComponent(vnode) {
