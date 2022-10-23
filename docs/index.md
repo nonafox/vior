@@ -70,7 +70,7 @@ let viorIns = new Vior({
         }
     },
     // `funcs` option: the way to define functions
-    // Notice: you need to do `this.vars.xxx` and `this.funcs.xxx`, for getting reactive variables and getting functions. It's the same in Vior's JS context (eg. Vior's options).
+    // Notice: you need to do `this.vars.xxx` and `this.funcs.xxx`, in order to get reactive variables and functions in Vior's JS context (eg. Vior's options).
     funcs: {
         increase() {
             this.funcs.anotherFunction()
@@ -306,15 +306,10 @@ let viorIns = new Vior({
             this.vars.mounted = true
             this.vars.mountedTime = Date.now()
         }
-    },
-    funcs: {
-        add() {
-            this.vars.arr.push(this.vars.arr.length + 1)
-        }
     }
 }).mount(document.getElementById('app'))
 ```
-[▶ Run in codesandbox](https://codesandbox.io/s/vior-hook-dknogm)
+[▶ Run in codesandbox](https://codesandbox.io/s/vior-hooks-dknogm)
 
 # Watchers
 ```html

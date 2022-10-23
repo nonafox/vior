@@ -273,7 +273,7 @@ let viorIns = new Vior({
     }
 }).mount(document.getElementById('app'))
 ```
-[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-twowaybinding-vu11ix)
+[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-hooks-dknogm)
 
 # 生命周期钩子
 ```html
@@ -304,11 +304,6 @@ let viorIns = new Vior({
         mounted() {
             this.vars.mounted = true
             this.vars.mountedTime = Date.now()
-        }
-    },
-    funcs: {
-        add() {
-            this.vars.arr.push(this.vars.arr.length + 1)
         }
     }
 }).mount(document.getElementById('app'))
