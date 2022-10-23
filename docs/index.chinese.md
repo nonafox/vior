@@ -423,6 +423,58 @@ let viorIns = new Vior({
 ```
 [▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-instancereferences-2sot8c)
 
+# 插件
+```html
+<div id="app">
+    <div>{{ globalText }}</div>
+    <custom-component></custom-component>
+</div>
+```
+```javascript
+import Vior from 'https://unpkg.com/vior'
+
+// 插件的定义、使用方式跟自定义组件差不多：
+let CustomPlugin = {
+    // setup选项是插件的核心。该选项应为一个函数，其会在每一个使用了该插件的Vior实例创建初期被调用。
+    // opts 为当前Vior实例的应用选项对象（包含 vars, funcs 等选项），arg 为引入插件时提供的参数，见下。
+    setup(opts, arg) {
+        // 例如这个插件，会将每个使用了它的Vior实例，都添加一个响应性变量 globalText，其值为自定义的值
+        let origin = typeof opts.vars == 'function' ? opts.vars() : {}
+        opts.vars = function () {
+            return Object.assign(origin, {
+                globalText: arg
+            })
+        }
+    }
+}
+
+let CustomComponent = {
+    html: `
+        <div>{{ globalText }}</div>
+    `,
+    // 通过plugins选项引入插件。插件参数 arg 为可选项
+    plugins: [
+        {
+            plugin: CustomPlugin,
+            arg: 'hello, Vior'
+        }
+    ]
+}
+
+let viorIns = new Vior({
+    comps: {
+        'custom-component': CustomComponent
+    },
+    plugins: [
+        {
+            plugin: CustomPlugin,
+            arg: 'hello, world'
+        }
+    ]
+}).mount(document.getElementById('app'))
+```
+[▶ 在 codesandbox 中运行](https://codesandbox.io/s/vior-plugins-v9vbq3)
+
 # 内置元素
 - `<template></...>`: 空元素，效果是只显示其插槽（子元素）内容。
 - `<slot-provider name="slotName"></...>`: 插槽提供者，配合`<slot-receiver></...>`将插槽内容传给组件。

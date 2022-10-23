@@ -423,6 +423,58 @@ let viorIns = new Vior({
 ```
 [▶ Run in codesandbox](https://codesandbox.io/s/vior-instancereferences-2sot8c)
 
+# Plugins
+```html
+<div id="app">
+    <div>{{ globalText }}</div>
+    <custom-component></custom-component>
+</div>
+```
+```javascript
+import Vior from 'https://unpkg.com/vior'
+
+// plugins seem like custom components, see:
+let CustomPlugin = {
+    // the core of plugins is `setup` option. it should be a function, and it'll be called when the Vior instances which depend on the plugin, is early initializing.
+    // `opts` is the current Vior instance's options object. `arg` is the argument from the Vior instance, see below for detail.
+    setup(opts, arg) {
+        // this plugin will add a reactive variable `globalText` for every Vior instances depend on it.
+        let origin = typeof opts.vars == 'function' ? opts.vars() : {}
+        opts.vars = function () {
+            return Object.assign(origin, {
+                globalText: arg
+            })
+        }
+    }
+}
+
+let CustomComponent = {
+    html: `
+        <div>{{ globalText }}</div>
+    `,
+    // import plugins by `plugins` option. `arg`, the optional, is the argument to be passed to the plugin.
+    plugins: [
+        {
+            plugin: CustomPlugin,
+            arg: 'hello, Vior'
+        }
+    ]
+}
+
+let viorIns = new Vior({
+    comps: {
+        'custom-component': CustomComponent
+    },
+    plugins: [
+        {
+            plugin: CustomPlugin,
+            arg: 'hello, world'
+        }
+    ]
+}).mount(document.getElementById('app'))
+```
+[▶ Run in codesandbox](https://codesandbox.io/s/vior-plugins-v9vbq3)
+
 # Inner Elements
 - `<template></...>`: void element. it'll only show its children.
 - `<slot-provider name="slotName"></...>`: slot provider, be used with `<slot-receiver></...>` to pass the slots to components.

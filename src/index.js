@@ -10,6 +10,9 @@ export default class Vior {
         this.vdom = new VDom()
         this.renderer = new Renderer(this)
         
+        this.opts = opts
+        this.handlePlugins()
+        
         if (opts.html) {
             this.html = opts.html
             this.originVNode = this.vdom.readFromText(opts.html)
@@ -22,13 +25,12 @@ export default class Vior {
             this.isComponent = true
         }
         
-        this.opts = opts
+        this.handleHooks()
         this.handleFunctions()
         this.vars = Ref.createRef(this, opts.vars ? opts.vars() : {})
         this.handleDynamicRefs()
         this.handleWatchers()
         this.handleComponents()
-        this.handleHooks()
         
         this.triggerHook('created')
     }
@@ -55,6 +57,14 @@ export default class Vior {
             for (let k in this.$children) {
                 let v = this.$children[k]
                 v.triggerHook(name, true)
+            }
+        }
+    }
+    handlePlugins() {
+        if (this.opts.plugins) {
+            for (let k in this.opts.plugins) {
+                let v = this.opts.plugins[k]
+                v.plugin.setup(this.opts, v.arg)
             }
         }
     }
