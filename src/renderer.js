@@ -286,7 +286,7 @@ export default class Renderer {
                 }
                 let inner = vnode.children[0],
                     regexp = /([a-zA-Z0-9\-_#\*\.]+)\s*{/g
-                inner.text = Util.scriptReplace(inner.text, regexp, `$1[${this.viorInstance.uniqueId}] {`)
+                inner.text = Util.scriptReg(inner.text, regexp, `$1[${this.viorInstance.uniqueId}] {`)
             }
         } catch (ex) {
             Util.triggerError('Render error', oriKey, val, ex)

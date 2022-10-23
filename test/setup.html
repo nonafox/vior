@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>Vior test</title>
+    </head>
+    <body>
+        <div id="app">
+            <div @click="foo(1,2,3,4)">
+                {{ test }}
+            </div>
+        </div>
+        <script id="setupCode" type="vior">
+            var: test, test2
+            function: foo
+            
+            test = 'cab'.split('')
+            function foo(a,b,c,d) {
+                console.log(test)
+            }
+        </script>
+        <script type="module">
+            import Setup from '../src/setup.js'
+            
+            let setup = new Setup(),
+                opts = await setup.compile(document.getElementById('setupCode').innerHTML)
+            console.log(opts)
+        </script>
+    </body>
+</html>

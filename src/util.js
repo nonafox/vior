@@ -152,21 +152,20 @@ export default {
     isScriptQuote(text, k) {
         return (text[k] == `'` || text[k] == `"` || text[k] == '`') && text[k - 1] != '\\'
     },
-    scriptReplace(_script, regexp, replace) {
+    scriptReg(_script, regexp, replace = null) {
         let script = _script.split(''), quoteStarter = null, addup = ''
         
         let reps = [], repsid = -1
-        for (let k in script) {
-            k = parseInt(k)
+        for (let k = 0; k < script.length; k ++) {
             let v = script[k]
             if (! quoteStarter) {
                 if (! this.isScriptQuote(script, k)) {
                     addup += v
                 } else {
                     quoteStarter = v
-                    repsid += 1
+                    repsid ++
                     reps[repsid] = ''
-                    addup += quoteStarter + '␣[' + repsid + ']␣'
+                    addup += quoteStarter + '\uffff' + repsid + '\uffff'
                 }
             } else {
                 if (this.isScriptQuote(script, k) && v == quoteStarter) {
@@ -178,12 +177,21 @@ export default {
             }
         }
         
-        addup = addup.replace(regexp, replace)
-        for (let k in reps) {
-            let v = reps
-            addup = addup.replace('␣[' + k + ']␣', v)
+        if (replace !== null) {
+            addup = addup.replace(regexp, replace)
+            for (let k in reps) {
+                let v = reps[k]
+                addup = addup.replace('\uffff' + k + '\uffff', v)
+            }
+            return addup
+        } else {
+            let res = [], v
+            while (v = regexp.exec(addup)) {
+                res.push(v)
+                if (! /\/.*g.*$/i.test(regexp.toString()))
+                    break
+            }
+            return res
         }
-        
-        return addup
     }
 }
