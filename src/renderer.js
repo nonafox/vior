@@ -280,8 +280,7 @@ export default class Renderer {
                 vnode.data.__special_attr__ref_code = val
             } else if (key == 'ownstyle') {
                 if (vnode.tag != 'style') {
-                    Util.triggerError('Render error', oriKey, val,
-                        '(inner error) you can only use command `$private` on <style><...> elements.')
+                    Util.triggerError('Render error', oriKey, val, '(inner error) you can only use command `$ownstyle` on <style><...> elements.')
                     return
                 }
                 let inner = vnode.children[0],
