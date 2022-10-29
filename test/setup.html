@@ -6,25 +6,34 @@
     </head>
     <body>
         <div id="app">
-            <div @click="foo(1,2,3,4)">
-                {{ test }}
-            </div>
+            <button @click="increase()" :disabled="count >= 10">
+                {{ count }}
+            </button>
+            <div>{{ test }}</div>
         </div>
         <script id="setupCode" type="vior">
-            var: test, test2
-            function: foo
+            var: count, test
+            function: increase
             
-            test = 'cab'.split('')
-            function foo(a,b,c,d) {
-                console.log(test)
+            count = 0
+            function increase() {
+                count ++
             }
+            $dynamicVar('test', function () {
+                return count + 1
+            })
+            $watch('test', function () {
+                console.log('changed')
+            })
         </script>
         <script type="module">
             import Setup from '../src/setup.js'
             
             let setup = new Setup(),
-                opts = await setup.compile(document.getElementById('setupCode').innerHTML)
-            console.log(opts)
+                viorIns = await setup.compile(document.getElementById('setupCode').innerHTML)
+            console.log(viorIns)
+            if (typeof viorIns != 'string')
+                viorIns.mount(document.getElementById('app'))
         </script>
     </body>
 </html>

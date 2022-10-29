@@ -11,6 +11,7 @@ export default class Vior {
             this.vdom = new VDom()
             this.renderer = new Renderer(this)
             
+            opts = opts ? opts : {}
             this.opts = opts
             this.handlePlugins()
             
@@ -29,7 +30,7 @@ export default class Vior {
             this.handleHooks()
             this.handleFunctions()
             this.vars = Ref.createRef(this, opts.vars ? opts.vars() : {})
-            this.handleDynamicRefs()
+            this.handleDynamicVars()
             this.handleWatchers()
             this.handleComponents()
             
@@ -82,7 +83,7 @@ export default class Vior {
             }
         }
     }
-    handleDynamicRefs() {
+    handleDynamicVars() {
         for (let k in this.vars) {
             let v = this.vars[k]
             if (typeof v == 'function') {
