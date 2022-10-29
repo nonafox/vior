@@ -390,14 +390,11 @@ export default class Renderer {
             }
             
             compIns.$parent = this.viorInstance
-            compIns.triggerHook('$familyChanged')
             if (! this.viorInstance.$children) {
                 this.viorInstance.$children = []
-                this.viorInstance.triggerHook('$familyChanged')
             }
             if (this.viorInstance.$children.indexOf(compIns) < 0) {
                 this.viorInstance.$children.push(compIns)
-                this.viorInstance.triggerHook('$familyChanged')
             }
             compIns.componentEvents = {}
             for (let kk2 in handledEvtFuncs) {
@@ -570,7 +567,6 @@ export default class Renderer {
                     $children.splice($children.indexOf(v2), 1)
                     v2.triggerHook('unmounted')
                     v2.triggerHook('uncreated')
-                    this.viorInstance.triggerHook('$familyChanged')
                 }
             }
         }
