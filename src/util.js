@@ -53,11 +53,11 @@ export default {
     _deepCopy(obj) {
         if (! this.isPlainObject(obj))
             return obj
-        let res = Array.isArray(obj) ? [...obj] : {...obj},
-            keys = Object.keys(res)
+        let res = Array.isArray(obj) ? [] : {},
+            keys = Object.keys(obj)
         for (let kk = 0; kk < keys.length; kk ++) {
             let k = keys[kk],
-                v = res[k]
+                v = obj[k]
             res[k] = this._deepCopy(v)
         }
         return res
