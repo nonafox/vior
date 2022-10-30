@@ -5,9 +5,11 @@ export default {
     voidTags: ['template', 'slot-receiver'],
     textOnlyTags: ['script', 'style'],
     VNodeTemplate: {
+        __isViorVNode: true,
         dom: null,
         tag: null,
         type: 'common',
+        static: false,
         attrs: {},
         ctx: {},
         setups: [],
@@ -46,42 +48,35 @@ export default {
         throw new Error('[Vior error]')
     },
     isPlainObject(obj) {
-        if (! obj)
-            return
-        if (Array.isArray(obj))
-            return true
-        if (typeof obj == 'object')
-            return obj.constructor === Object
-        else
-            return false
+        return obj && (obj.constructor === Object || Array.isArray(obj))
     },
-    deepCopy(...arrs) {
-        let res = Array.isArray(arrs[0]) ? [] : {},
-            merges = []
-        for (let _k = 0; _k < arrs.length; _k ++) {
-            let arr = arrs[_k],
-                _res = Array.isArray(arr) ? [] : {},
-                keys = Object.keys(arr)
+    _deepCopy(obj) {
+        if (! this.isPlainObject(obj))
+            return obj
+        let res = Array.isArray(obj) ? [...obj] : {...obj},
+            keys = Object.keys(res)
+        for (let kk = 0; kk < keys.length; kk ++) {
+            let k = keys[kk],
+                v = res[k]
+            res[k] = this._deepCopy(v)
+        }
+        return res
+    },
+    deepCopy(...objs) {
+        if (objs.length === 1)
+            return this._deepCopy(objs[0])
+        
+        let res = Array.isArray(objs[0]) ? [] : {}
+        for (let k in objs) {
+            let v = objs[k]
+            let keys = Object.keys(v)
             for (let kk = 0; kk < keys.length; kk ++) {
-                let k = keys[kk],
-                    v = arr[k]
-                
-                if (this.isPlainObject(v))
-                    _res[k] = this.deepCopy(v)
-                else
-                    _res[k] = v
-            }
-            merges.push(_res)
-        }
-        for (let k = 0; k < merges.length; k ++) {
-            let v = merges[k]
-            let kks = Object.keys(v)
-            for (let kk2 = 0; kk2 < kks.length; kk2 ++) {
-                let k2 = kks[kk2],
+                let k2 = keys[kk],
                     v2 = v[k2]
-                res[k2] = v2
+                res[k2] = this._deepCopy(v2)
             }
         }
+        
         return res
     },
     deepCompare(a1, a2) {

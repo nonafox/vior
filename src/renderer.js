@@ -358,11 +358,13 @@ export default class Renderer {
                 }
                 return { newKey: newKey, newVal: newVal }
             case 'text':
-                let reg = /{{(.*?)}}/g, _res = data, res = data, matched
-                while (matched = reg.exec(_res)) {
-                    res = res.replace(matched[0], this.runInContext(vnode, '(HTML template) [unknown]', matched[1]))
+                let reg = /{{(.*?)}}/g, res = data
+                let arr = res.matchAll(reg), changed = false
+                for (let v of arr) {
+                    res = res.replace(v[0], this.runInContext(vnode, '(HTML template) [unknown]', v[1]))
+                    changed = true
                 }
-                return res
+                return changed ? res : null
             default:
                 return null
         }
@@ -494,8 +496,7 @@ export default class Renderer {
         
         for (let k = 0; k < tree.length; k ++) {
             let v = tree[k]
-            if (! v) continue
-            
+            if (! v || (v.__origin && v.__origin.static)) continue
             v.ctx = Util.deepCopy(onode.ctx, v.ctx || {})
             
             let deleted = false
@@ -509,13 +510,16 @@ export default class Renderer {
                     deleted = true
                     break
                 }
-                if (newKey)
+                if (newKey) {
                     v.attrs[newKey] = newVal
-                if (newKey != k2)
+                }
+                if (newKey != k2) {
                     delete v.attrs[k2]
+                }
             }
             if (deleted)
                 continue
+            
             if (v.tag)
                 v.attrs[this.viorInstance.uniqueId] = ''
             let handledEvtFuncs = this.handleEvtFunctions(v)
@@ -538,8 +542,12 @@ export default class Renderer {
                 continue
             }
             
-            if (v.type == 'text' && v.text)
-                v.text = this.__render(onode, v, 'text', v.text)
+            if (v.type == 'text' && v.text) {
+                let rres = this.__render(onode, v, 'text', v.text)
+                if (typeof rres == 'string') {
+                    v.text = rres
+                }
+            }
             if (v.tag && v.children) {
                 let children = this.render(v, v.ctx, false, cachedCompIns, slots).children
                 if (v.type != 'void') {
