@@ -4,14 +4,14 @@ let currentContext, currentContextFavourTag, currentContextOnce = false
 
 export default class Dep {
     static createDepContext(_this, func, favourTag = null) {
-        let doit = () => {
+        let doit = (viorIns, tag) => {
             currentContext = doit
             currentContextFavourTag = favourTag
-            func.call(_this)
+            func.call(_this, viorIns, tag)
             currentContext = null
             currentContextFavourTag = null
         }
-        doit()
+        doit(_this, null)
     }
     
     constructor(_this) {
@@ -34,7 +34,7 @@ export default class Dep {
         for (let vv of this.deps.entries()) {
             let k = vv[0], v = vv[1]
             if (v.tags[tag] && (v.favourTag ? v.favourTag == tag : true) && typeof k == 'function')
-                k.call(visInstance)
+                k(visInstance, tag)
         }
     }
 }

@@ -9,7 +9,7 @@ export default {
         dom: null,
         tag: null,
         type: 'common',
-        static: false,
+        ignore: false,
         attrs: {},
         ctx: {},
         setups: [],

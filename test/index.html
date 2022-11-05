@@ -34,13 +34,21 @@
                                 color: blue
                             }
                         </style>
-                        <span>{{ key + 1 }}: {{ value }}</span>
+                        <span :style="{ color: level >= 5 ? 'red' : 'black' }">
+                            {{ key + 1 }}: {{ value }}
+                        </span>
                         <strong $is="(key + 1) % 3 === 0 ? 'i' : 'strong'">
                             <slot-receiver name="desc"></slot-receiver>
                         </strong>
+                        <button @click="level ++">{{ level }}</button>
                         <button @click="$triggerEvent('ondelete', key)">delete</button>
                     </li>
                 `,
+                vars() {
+                    return {
+                        level: 0
+                    }
+                },
                 attrs: ['key', 'value'],
                 events: ['ondelete']
             }

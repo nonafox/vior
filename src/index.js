@@ -119,8 +119,8 @@ export default class Vior {
             this.mounted = elm
             this.originVNode = this.vdom.read(elm)
             this.currentVNode = Util.deepCopy(this.originVNode)
-            Dep.createDepContext(this, function () {
-                this.update()
+            Dep.createDepContext(this, function (viorIns, tag) {
+                this.update(viorIns, tag)
             })
             
             this.triggerHook('mounted')
@@ -151,7 +151,7 @@ export default class Vior {
                 this.handleSetupFunctions(v.children)
         }
     }
-    update() {
+    update(partyViorIns, partyTag) {
         try {
             if (! this.mounted || this.isComponent)
                 return

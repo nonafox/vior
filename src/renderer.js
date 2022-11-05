@@ -481,8 +481,24 @@ export default class Renderer {
             return null
         }
     }
+    handleRawLinks(onode, nnode) {
+        if (nnode.__isViorVNode) {
+            nnode.raw = onode
+        }
+        if (nnode.children) {
+            for (let k in nnode.children) {
+                let v = nnode.children[k]
+                this.handleRawLinks(onode.children[k], v)
+            }
+        }
+    }
+    deepCopy(onode) {
+        let res = Util.deepCopy(onode)
+        this.handleRawLinks(onode, res)
+        return res
+    }
     render(_onode, ctx = {}, rootRender = true, cachedCompIns = [], slots = []) {
-        let onode = rootRender ? Util.deepCopy(_onode) : _onode
+        let onode = rootRender ? this.deepCopy(_onode) : _onode
         let tree = onode.children || []
         let defaultCtx = {
             __viorInstance: this.viorInstance,
@@ -496,7 +512,7 @@ export default class Renderer {
         
         for (let k = 0; k < tree.length; k ++) {
             let v = tree[k]
-            if (! v || (v.__origin && v.__origin.static)) continue
+            if (! v || v.ignore) continue
             v.ctx = Util.deepCopy(onode.ctx, v.ctx || {})
             
             let deleted = false
