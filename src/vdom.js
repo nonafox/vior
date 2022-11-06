@@ -5,13 +5,6 @@ export default class VDom {
     constructor() {
         this.tdom = new TDom()
     }
-    getElementType(dom) {
-        if (dom.tagName && dom.tagName.toLowerCase() == 'void')
-            return 'void'
-        if (dom.tagName)
-            return 'common'
-        return dom.nodeName.substr(1)
-    }
     readFromText(text) {
         let res = this.tdom.read(text)
         if (typeof res == 'string')

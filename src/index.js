@@ -138,6 +138,7 @@ export default class Vior {
                     if (typeof v2 == 'function')
                         v2(v, v.dom)
                 }
+                delete v.setups
             } else {
                 for (let k2 in v.unsetups) {
                     let v2 = v.unsetups[k2]
@@ -146,6 +147,7 @@ export default class Vior {
                         delete v.deleted_dom
                     }
                 }
+                delete v.unsetups
             }
             if (v.children && v.children.length)
                 this.handleSetupFunctions(v.children)

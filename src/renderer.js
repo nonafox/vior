@@ -383,7 +383,7 @@ export default class Renderer {
                 cachedCompIns[compName].splice(0, 1)
             } else {
                 let viorConstructor = Object.getPrototypeOf(_this).constructor
-                compIns = new viorConstructor(compOpts)
+                compIns = new viorConstructor(compOpts || {})
                 if (! _this.cachedComponentIns[compName])
                     _this.cachedComponentIns[compName] = []
                 _this.cachedComponentIns[compName].push(compIns)
