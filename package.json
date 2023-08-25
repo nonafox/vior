@@ -1,7 +1,7 @@
 {
     "name": "vior",
     "type": "module",
-    "version": "0.5.16",
+    "version": "0.5.17",
     "description": "A mini copy of Vue made on my own.",
     "main": "src/index.js",
     "scripts": {
